@@ -60,6 +60,13 @@ import { ATTACHMENT_POST_TYPE, DESIGN_POST_TYPES } from '../../store/constants';
 import postPreviewField from '../fields/content-preview';
 import { unlock } from '../../lock-unlock';
 
+interface FieldCollectionResponse {
+	id: string;
+	kind: string;
+	name: string | null;
+	fields: Field< any >[];
+}
+
 declare global {
 	interface Window {
 		__experimentalTemplateActivate?: boolean;

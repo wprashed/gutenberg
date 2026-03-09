@@ -95,6 +95,8 @@ if ( class_exists( 'WP_REST_Controller' ) ) {
 	require_once __DIR__ . '/experimental/kses-allowed-html.php';
 
 	require_once __DIR__ . '/experimental/class-gutenberg-hierarchical-sort.php';
+
+	require_once __DIR__ . '/experimental/field-collections/class-gutenberg-rest-field-collections-controller.php';
 }
 
 require_once __DIR__ . '/remove-core-enqueue-scripts.php';
@@ -127,6 +129,7 @@ require __DIR__ . '/experimental/script-modules.php';
 require __DIR__ . '/experimental/pages/site-editor.php';
 require __DIR__ . '/experimental/extensible-site-editor.php';
 require __DIR__ . '/experimental/fonts/load.php';
+require __DIR__ . '/experimental/field-collections/field-collections.php';
 if ( class_exists( '\WordPress\AiClient\AiClient' ) ) {
 	require __DIR__ . '/experimental/connectors/load.php';
 }
