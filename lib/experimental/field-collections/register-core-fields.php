@@ -40,7 +40,7 @@ $notes_count = array(
 );
 
 gutenberg_register_field_collection(
-	'core/post-fields',
+	'core/page-fields',
 	'postType',
 	'page',
 	array(
