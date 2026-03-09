@@ -182,7 +182,7 @@ export const registerPostTypeSchema =
 			.select( editorStore )
 			.getEditorSettings();
 
-		const [ canCreate, currentTheme, fieldCollection ] = await Promise.all(
+		const [ canCreate, currentTheme, fieldCollections ] = await Promise.all(
 			[
 				registry.resolveSelect( coreStore ).canUser( 'create', {
 					kind: 'postType',
@@ -310,12 +310,19 @@ export const registerPostTypeSchema =
 					field
 				);
 			} );
-			fieldCollection.forEach( ( field ) => {
-				unlock( registry.dispatch( editorStore ) ).registerEntityField(
-					'postType',
-					postType,
-					field
-				);
+			fieldCollections.forEach( ( collection ) => {
+				if (
+					collection.kind !== 'postType' ||
+					collection.name !== postType
+				) {
+					return;
+				}
+
+				collection.fields.forEach( ( field ) => {
+					unlock(
+						registry.dispatch( editorStore )
+					).registerEntityField( 'postType', postType, field );
+				} );
 			} );
 		} );
 
