@@ -1,7 +1,6 @@
 /**
  * WordPress dependencies
  */
-import apiFetch from '@wordpress/api-fetch';
 import { store as coreStore } from '@wordpress/core-data';
 import type { Action, Field } from '@wordpress/dataviews';
 import { doAction } from '@wordpress/hooks';
@@ -58,13 +57,6 @@ import { store as editorStore } from '../../store';
 import { ATTACHMENT_POST_TYPE, DESIGN_POST_TYPES } from '../../store/constants';
 import postPreviewField from '../fields/content-preview';
 import { unlock } from '../../lock-unlock';
-
-interface FieldCollectionResponse {
-	id: string;
-	kind: string;
-	name: string | null;
-	fields: Field< any >[];
-}
 
 declare global {
 	interface Window {
@@ -189,9 +181,12 @@ export const registerPostTypeSchema =
 					name: postType,
 				} ),
 				registry.resolveSelect( coreStore ).getCurrentTheme(),
-				apiFetch< FieldCollectionResponse[] >( {
-					path: `/wp/v2/field-collections?kind=postType&name=${ postType }`,
-				} ).catch( () => [] as FieldCollectionResponse[] ),
+				registry
+					.resolveSelect( coreStore )
+					.getEntityRecords( 'root', 'fieldCollection', {
+						kind: 'postType',
+						name: postType,
+					} ),
 			]
 		);
 
@@ -310,7 +305,7 @@ export const registerPostTypeSchema =
 					field
 				);
 			} );
-			fieldCollections.forEach( ( collection ) => {
+			( fieldCollections ?? [] ).forEach( ( collection: any ) => {
 				if (
 					collection.kind !== 'postType' ||
 					collection.name !== postType
@@ -318,7 +313,7 @@ export const registerPostTypeSchema =
 					return;
 				}
 
-				collection.fields.forEach( ( field ) => {
+				collection.fields.forEach( ( field: Field< any > ) => {
 					unlock(
 						registry.dispatch( editorStore )
 					).registerEntityField( 'postType', postType, field );
