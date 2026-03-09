@@ -130,6 +130,7 @@ require __DIR__ . '/experimental/pages/site-editor.php';
 require __DIR__ . '/experimental/extensible-site-editor.php';
 require __DIR__ . '/experimental/fonts/load.php';
 require __DIR__ . '/experimental/field-collections/field-collections.php';
+require __DIR__ . '/experimental/field-collections/register-core-fields.php';
 if ( class_exists( '\WordPress\AiClient\AiClient' ) ) {
 	require __DIR__ . '/experimental/connectors/load.php';
 }

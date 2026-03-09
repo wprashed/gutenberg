@@ -1,6 +1,7 @@
 /**
  * WordPress dependencies
  */
+import apiFetch from '@wordpress/api-fetch';
 import { store as coreStore } from '@wordpress/core-data';
 import type { Action, Field } from '@wordpress/dataviews';
 import { doAction } from '@wordpress/hooks';
@@ -23,7 +24,6 @@ import {
 	dateField,
 	parentField,
 	passwordField,
-	commentStatusField,
 	pingStatusField,
 	discussionField,
 	slugField,
@@ -34,7 +34,6 @@ import {
 	templateTitleField,
 	pageTitleField,
 	patternTitleField,
-	notesField,
 	scheduledDateField,
 	formatField,
 	postContentInfoField,
@@ -72,20 +71,6 @@ declare global {
 		__experimentalTemplateActivate?: boolean;
 		__experimentalMediaEditor?: boolean;
 	}
-}
-
-/**
- * Check if a post type supports editor notes.
- *
- * @param supports The post type supports object.
- * @return Whether editor notes are supported.
- */
-function hasEditorNotesSupport( supports?: PostType[ 'supports' ] ): boolean {
-	const editor = supports?.editor;
-	if ( Array.isArray( editor ) ) {
-		return !! editor[ 0 ]?.notes;
-	}
-	return false;
 }
 
 export function registerEntityAction< Item >(
@@ -193,18 +178,22 @@ export const registerPostTypeSchema =
 			.resolveSelect( coreStore )
 			.getPostType( postType ) ) as PostType;
 
-		const canCreate = await registry
-			.resolveSelect( coreStore )
-			.canUser( 'create', {
-				kind: 'postType',
-				name: postType,
-			} );
-		const currentTheme = await registry
-			.resolveSelect( coreStore )
-			.getCurrentTheme();
 		const { disablePostFormats } = registry
 			.select( editorStore )
 			.getEditorSettings();
+
+		const [ canCreate, currentTheme, fieldCollection ] = await Promise.all(
+			[
+				registry.resolveSelect( coreStore ).canUser( 'create', {
+					kind: 'postType',
+					name: postType,
+				} ),
+				registry.resolveSelect( coreStore ).getCurrentTheme(),
+				apiFetch< FieldCollectionResponse[] >( {
+					path: `/wp/v2/field-collections?kind=postType&name=${ postType }`,
+				} ).catch( () => [] as FieldCollectionResponse[] ),
+			]
+		);
 
 		let canDuplicate =
 			! [ 'wp_block', 'wp_template_part' ].includes(
@@ -275,7 +264,6 @@ export const registerPostTypeSchema =
 					scheduledDateField,
 				slugField,
 				postTypeConfig.supports?.[ 'page-attributes' ] && parentField,
-				postTypeConfig.supports?.comments && commentStatusField,
 				postTypeConfig.supports?.trackbacks && pingStatusField,
 				( postTypeConfig.supports?.comments ||
 					postTypeConfig.supports?.trackbacks ) &&
@@ -291,7 +279,6 @@ export const registerPostTypeSchema =
 				postTypeConfig.supports?.editor &&
 					postTypeConfig.viewable &&
 					postPreviewField,
-				hasEditorNotesSupport( postTypeConfig.supports ) && notesField,
 			].filter( Boolean );
 			if ( postTypeConfig.supports?.title ) {
 				let _titleField;
@@ -317,6 +304,13 @@ export const registerPostTypeSchema =
 				);
 			} );
 			fields.forEach( ( field ) => {
+				unlock( registry.dispatch( editorStore ) ).registerEntityField(
+					'postType',
+					postType,
+					field
+				);
+			} );
+			fieldCollection.forEach( ( field ) => {
 				unlock( registry.dispatch( editorStore ) ).registerEntityField(
 					'postType',
 					postType,
