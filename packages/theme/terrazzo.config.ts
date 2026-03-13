@@ -123,6 +123,11 @@ const config: Config = {
 					patterns: [ /^wpds-dimension\.gap\.([^.]+)$/ ],
 				},
 				{
+					name: 'Size',
+					description: 'Size scale for element sizing tokens.',
+					patterns: [ /^wpds-dimension\.size\.([^.]+)$/ ],
+				},
+				{
 					name: 'SurfaceWidthSize',
 					description: 'Size scale for surface width tokens.',
 					patterns: [ /^wpds-dimension\.surface-width\.([^.]+)$/ ],
