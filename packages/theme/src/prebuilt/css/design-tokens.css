@@ -237,6 +237,8 @@
   --wpds-dimension-size-md: 32px;
   /* Large element size */
   --wpds-dimension-size-lg: 40px;
+  /* Extra large element size */
+  --wpds-dimension-size-xl: 48px;
   /* Extra small surface width */
   --wpds-dimension-surface-width-xs: 240px;
   /* Small surface width */
@@ -410,6 +412,8 @@
   --wpds-dimension-size-md: 32px;
   /* Large element size */
   --wpds-dimension-size-lg: 40px;
+  /* Extra large element size */
+  --wpds-dimension-size-xl: 48px;
   /* Extra small surface width */
   --wpds-dimension-surface-width-xs: 240px;
   /* Small surface width */
