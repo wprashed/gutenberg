@@ -1733,6 +1733,7 @@ async function buildRoute( routeName ) {
 /**
  * Build all discovered routes.
  *
+ * @param  activePageIds
  * @return {Promise<void>}
  */
 async function buildAllRoutes( activePageIds = null ) {
