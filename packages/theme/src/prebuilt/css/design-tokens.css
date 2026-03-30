@@ -232,13 +232,13 @@
   /* Extra small element size */
   --wpds-dimension-size-xs: 16px;
   /* Small element size */
-  --wpds-dimension-size-sm: 24px;
+  --wpds-dimension-size-sm: 20px;
   /* Medium element size */
-  --wpds-dimension-size-md: 32px;
+  --wpds-dimension-size-md: 24px;
   /* Large element size */
-  --wpds-dimension-size-lg: 40px;
+  --wpds-dimension-size-lg: 32px;
   /* Extra large element size */
-  --wpds-dimension-size-xl: 48px;
+  --wpds-dimension-size-xl: 40px;
   /* Extra small surface width */
   --wpds-dimension-surface-width-xs: 240px;
   /* Small surface width */
@@ -407,13 +407,13 @@
   /* Extra small element size */
   --wpds-dimension-size-xs: 16px;
   /* Small element size */
-  --wpds-dimension-size-sm: 24px;
+  --wpds-dimension-size-sm: 20px;
   /* Medium element size */
-  --wpds-dimension-size-md: 32px;
+  --wpds-dimension-size-md: 24px;
   /* Large element size */
-  --wpds-dimension-size-lg: 40px;
+  --wpds-dimension-size-lg: 32px;
   /* Extra large element size */
-  --wpds-dimension-size-xl: 48px;
+  --wpds-dimension-size-xl: 40px;
   /* Extra small surface width */
   --wpds-dimension-surface-width-xs: 240px;
   /* Small surface width */
