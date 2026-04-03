@@ -91,7 +91,9 @@ export default function DataFormPostSummary( { onActionPerformed } ) {
 					return {
 						...field,
 						layout: {
-							...field.layout,
+							// TODO: this is temp hack for preserving the field's color.
+							// `panel` layout makes readonly fields gray.
+							type: 'regular',
 							labelPosition: 'none',
 						},
 					};
