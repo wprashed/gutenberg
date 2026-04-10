@@ -14,22 +14,17 @@ import { useColorsPerOrigin, useGradientsPerOrigin } from './hooks';
 import { useToolsPanelDropdownMenuProps } from './utils';
 import { setImmutably } from '../../utils/object';
 
+// The Color panel now only contains link and element (heading, button,
+// caption, h1–h6) controls. Top-level text color lives in the
+// Typography panel and top-level background color lives in the
+// Background panel.
 export function useHasColorPanel( settings ) {
-	const hasTextPanel = useHasTextPanel( settings );
-	const hasBackgroundPanel = useHasBackgroundColorPanel( settings );
 	const hasLinkPanel = useHasLinkPanel( settings );
 	const hasHeadingPanel = useHasHeadingPanel( settings );
 	const hasButtonPanel = useHasButtonPanel( settings );
 	const hasCaptionPanel = useHasCaptionPanel( settings );
 
-	return (
-		hasTextPanel ||
-		hasBackgroundPanel ||
-		hasLinkPanel ||
-		hasHeadingPanel ||
-		hasButtonPanel ||
-		hasCaptionPanel
-	);
+	return hasLinkPanel || hasHeadingPanel || hasButtonPanel || hasCaptionPanel;
 }
 
 export function useHasTextPanel( settings ) {
@@ -126,8 +121,6 @@ export function ColorToolsPanel( {
 }
 
 const DEFAULT_CONTROLS = {
-	text: true,
-	background: true,
 	link: true,
 	heading: true,
 	button: true,
@@ -151,12 +144,6 @@ export default function ColorPanel( {
 	const areCustomGradientsEnabled = settings?.color?.customGradient;
 	const hasSolidColors = colors.length > 0 || areCustomSolidsEnabled;
 	const hasGradientColors = gradients.length > 0 || areCustomGradientsEnabled;
-	// When a block opts into background.gradient support, the gradient
-	// picker moves to the Background panel. Hide it here to avoid
-	// showing duplicate gradient controls.
-	const hasBackgroundGradientSupport = !! settings?.background?.gradient;
-	const showGradientColors =
-		hasGradientColors && ! hasBackgroundGradientSupport;
 	const decodeValue = ( rawValue ) =>
 		getValueFromVariable( { settings }, '', rawValue );
 	const encodeColorValue = ( colorValue ) => {
@@ -180,47 +167,6 @@ export default function ColorPanel( {
 		return gradientObject
 			? 'var:preset|gradient|' + gradientObject.slug
 			: gradientValue;
-	};
-
-	// BackgroundColor
-	const showBackgroundPanel = useHasBackgroundColorPanel( settings );
-	const backgroundColor = decodeValue( inheritedValue?.color?.background );
-	const userBackgroundColor = decodeValue( value?.color?.background );
-	const gradient = decodeValue( inheritedValue?.color?.gradient );
-	const userGradient = decodeValue( value?.color?.gradient );
-	const hasBackground = () =>
-		!! userBackgroundColor ||
-		( ! hasBackgroundGradientSupport && !! userGradient );
-	const setBackgroundColor = ( newColor ) => {
-		const newValue = setImmutably(
-			value,
-			[ 'color', 'background' ],
-			encodeColorValue( newColor )
-		);
-		if ( ! hasBackgroundGradientSupport ) {
-			newValue.color.gradient = undefined;
-		}
-		onChange( newValue );
-	};
-	const setGradient = ( newGradient ) => {
-		const newValue = setImmutably(
-			value,
-			[ 'color', 'gradient' ],
-			encodeGradientValue( newGradient )
-		);
-		newValue.color.background = undefined;
-		onChange( newValue );
-	};
-	const resetBackground = () => {
-		const newValue = setImmutably(
-			value,
-			[ 'color', 'background' ],
-			undefined
-		);
-		if ( ! hasBackgroundGradientSupport ) {
-			newValue.color.gradient = undefined;
-		}
-		onChange( newValue );
 	};
 
 	// Links
@@ -267,29 +213,6 @@ export default function ColorPanel( {
 		);
 		onChange( newValue );
 	};
-
-	// Text Color
-	const showTextPanel = useHasTextPanel( settings );
-	const textColor = decodeValue( inheritedValue?.color?.text );
-	const userTextColor = decodeValue( value?.color?.text );
-	const hasTextColor = () => !! userTextColor;
-	const setTextColor = ( newColor ) => {
-		let changedObject = setImmutably(
-			value,
-			[ 'color', 'text' ],
-			encodeColorValue( newColor )
-		);
-		if ( textColor === linkColor ) {
-			changedObject = setImmutably(
-				changedObject,
-				[ 'elements', 'link', 'color', 'text' ],
-				encodeColorValue( newColor )
-			);
-		}
-
-		onChange( changedObject );
-	};
-	const resetTextColor = () => setTextColor( undefined );
 
 	// Elements
 	const elements = [
@@ -344,7 +267,6 @@ export default function ColorPanel( {
 		( previousValue ) => {
 			return {
 				...previousValue,
-				color: undefined,
 				elements: {
 					...previousValue?.elements,
 					link: {
@@ -370,51 +292,6 @@ export default function ColorPanel( {
 	);
 
 	const items = [
-		showTextPanel && {
-			key: 'text',
-			label: __( 'Text' ),
-			hasValue: hasTextColor,
-			resetValue: resetTextColor,
-			isShownByDefault: defaultControls.text,
-			indicators: [ textColor ],
-			tabs: [
-				{
-					key: 'text',
-					label: __( 'Text' ),
-					inheritedValue: textColor,
-					setValue: setTextColor,
-					userValue: userTextColor,
-				},
-			],
-		},
-		showBackgroundPanel && {
-			key: 'background',
-			label: __( 'Background' ),
-			hasValue: hasBackground,
-			resetValue: resetBackground,
-			isShownByDefault: defaultControls.background,
-			indicators: [
-				( showGradientColors ? gradient : undefined ) ??
-					backgroundColor,
-			],
-			tabs: [
-				hasSolidColors && {
-					key: 'background',
-					label: __( 'Color' ),
-					inheritedValue: backgroundColor,
-					setValue: setBackgroundColor,
-					userValue: userBackgroundColor,
-				},
-				showGradientColors && {
-					key: 'gradient',
-					label: __( 'Gradient' ),
-					inheritedValue: gradient,
-					setValue: setGradient,
-					userValue: userGradient,
-					isGradient: true,
-				},
-			].filter( Boolean ),
-		},
 		showLinkPanel && {
 			key: 'link',
 			label: __( 'Link' ),
