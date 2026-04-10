@@ -25,6 +25,9 @@ import TextTransformControl from '../text-transform-control';
 import TextDecorationControl from '../text-decoration-control';
 import TextIndentControl from '../text-indent-control';
 import WritingModeControl from '../writing-mode-control';
+import ColorGradientDropdownItem from './color-gradient-dropdown-item';
+import { useHasTextPanel } from './color-panel';
+import { useColorsPerOrigin } from './hooks';
 import { useToolsPanelDropdownMenuProps } from './utils';
 import { setImmutably } from '../../utils/object';
 import {
@@ -48,6 +51,7 @@ export function useHasTypographyPanel( settings ) {
 	const hasWritingMode = useHasWritingModeControl( settings );
 	const hasTextColumns = useHasTextColumnsControl( settings );
 	const hasFontSize = useHasFontSizeControl( settings );
+	const hasTextColor = useHasTextPanel( settings );
 
 	return (
 		hasFontFamily ||
@@ -60,7 +64,8 @@ export function useHasTypographyPanel( settings ) {
 		hasTextDecoration ||
 		hasTextIndent ||
 		hasWritingMode ||
-		hasTextColumns
+		hasTextColumns ||
+		hasTextColor
 	);
 }
 
@@ -169,6 +174,7 @@ function TypographyToolsPanel( {
 }
 
 const DEFAULT_CONTROLS = {
+	textColor: true,
 	fontFamily: true,
 	fontSize: true,
 	fontAppearance: true,
@@ -194,6 +200,37 @@ export default function TypographyPanel( {
 } ) {
 	const decodeValue = ( rawValue ) =>
 		getValueFromVariable( { settings }, '', rawValue );
+
+	// Text color. Writes to `color.text` (unchanged storage path). The
+	// control is rendered here instead of the Color panel because text
+	// color is a typographic concern.
+	const hasTextColorEnabled = useHasTextPanel( settings );
+	const colors = useColorsPerOrigin( settings );
+	const areCustomSolidsEnabled = settings?.color?.custom;
+	const encodeColorValue = ( colorValue ) => {
+		const allColors = colors.flatMap(
+			( { colors: originColors } ) => originColors
+		);
+		const colorObject = allColors.find(
+			( { color } ) => color === colorValue
+		);
+		return colorObject
+			? 'var:preset|color|' + colorObject.slug
+			: colorValue;
+	};
+	const textColor = decodeValue( inheritedValue?.color?.text );
+	const userTextColor = decodeValue( value?.color?.text );
+	const hasTextColorValue = () => !! value?.color?.text;
+	const setTextColor = ( newColor ) => {
+		onChange(
+			setImmutably(
+				value,
+				[ 'color', 'text' ],
+				encodeColorValue( newColor )
+			)
+		);
+	};
+	const resetTextColor = () => setTextColor( undefined );
 
 	// Font Family
 	const hasFontFamilyEnabled = useHasFontFamilyControl( settings );
@@ -490,12 +527,25 @@ export default function TypographyPanel( {
 	const hasTextAlign = () => !! value?.typography?.textAlign;
 	const resetTextAlign = () => setTextAlign( undefined );
 
-	const resetAllFilter = useCallback( ( previousValue ) => {
-		return {
-			...previousValue,
-			typography: {},
-		};
-	}, [] );
+	const resetAllFilter = useCallback(
+		( previousValue ) => {
+			if ( ! hasTextColorEnabled ) {
+				return {
+					...previousValue,
+					typography: {},
+				};
+			}
+			return {
+				...previousValue,
+				typography: {},
+				color: {
+					...previousValue?.color,
+					text: undefined,
+				},
+			};
+		},
+		[ hasTextColorEnabled ]
+	);
 
 	return (
 		<Wrapper
@@ -504,6 +554,29 @@ export default function TypographyPanel( {
 			onChange={ onChange }
 			panelId={ panelId }
 		>
+			{ hasTextColorEnabled && (
+				<ColorGradientDropdownItem
+					label={ __( 'Text' ) }
+					hasValue={ hasTextColorValue }
+					resetValue={ resetTextColor }
+					isShownByDefault={ defaultControls.textColor }
+					indicators={ [ textColor ] }
+					tabs={ [
+						{
+							key: 'text',
+							label: __( 'Text' ),
+							inheritedValue: textColor,
+							setValue: setTextColor,
+							userValue: userTextColor,
+						},
+					] }
+					colorGradientControlSettings={ {
+						colors,
+						disableCustomColors: ! areCustomSolidsEnabled,
+					} }
+					panelId={ panelId }
+				/>
+			) }
 			{ hasFontFamilyEnabled && (
 				<ToolsPanelItem
 					label={ __( 'Font' ) }
