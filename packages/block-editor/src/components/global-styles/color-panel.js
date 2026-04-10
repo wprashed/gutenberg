@@ -1,39 +1,18 @@
 /**
- * External dependencies
- */
-import clsx from 'clsx';
-
-/**
  * WordPress dependencies
  */
-import {
-	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
-	__experimentalHStack as HStack,
-	// TODO: Replace this ZStack with ad hoc CSS.
-	// eslint-disable-next-line @wordpress/use-recommended-components
-	__experimentalZStack as ZStack,
-	__experimentalDropdownContentWrapper as DropdownContentWrapper,
-	ColorIndicator,
-	Flex,
-	FlexItem,
-	Dropdown,
-	Button,
-	privateApis as componentsPrivateApis,
-} from '@wordpress/components';
-import { useCallback, useRef } from '@wordpress/element';
+import { __experimentalToolsPanel as ToolsPanel } from '@wordpress/components';
+import { useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getValueFromVariable } from '@wordpress/global-styles-engine';
-import { reset as resetIcon } from '@wordpress/icons';
 
 /**
  * Internal dependencies
  */
-import ColorGradientControl from '../colors-gradients/control';
+import ColorGradientDropdownItem from './color-gradient-dropdown-item';
 import { useColorsPerOrigin, useGradientsPerOrigin } from './hooks';
 import { useToolsPanelDropdownMenuProps } from './utils';
 import { setImmutably } from '../../utils/object';
-import { unlock } from '../../lock-unlock';
 
 export function useHasColorPanel( settings ) {
 	const hasTextPanel = useHasTextPanel( settings );
@@ -154,171 +133,6 @@ const DEFAULT_CONTROLS = {
 	button: true,
 	caption: true,
 };
-
-const popoverProps = {
-	placement: 'left-start',
-	offset: 36,
-	shift: true,
-};
-
-const { Tabs } = unlock( componentsPrivateApis );
-
-const LabeledColorIndicators = ( { indicators, label } ) => (
-	<HStack justify="flex-start">
-		<ZStack isLayered={ false } offset={ -8 }>
-			{ indicators.map( ( indicator, index ) => (
-				<Flex key={ index } expanded={ false }>
-					<ColorIndicator colorValue={ indicator } />
-				</Flex>
-			) ) }
-		</ZStack>
-		<FlexItem className="block-editor-panel-color-gradient-settings__color-name">
-			{ label }
-		</FlexItem>
-	</HStack>
-);
-
-function ColorPanelTab( {
-	isGradient,
-	inheritedValue,
-	userValue,
-	setValue,
-	colorGradientControlSettings,
-} ) {
-	return (
-		<ColorGradientControl
-			{ ...colorGradientControlSettings }
-			showTitle={ false }
-			enableAlpha
-			__experimentalIsRenderedInSidebar
-			colorValue={ isGradient ? undefined : inheritedValue }
-			gradientValue={ isGradient ? inheritedValue : undefined }
-			onColorChange={ isGradient ? undefined : setValue }
-			onGradientChange={ isGradient ? setValue : undefined }
-			clearable={ inheritedValue === userValue }
-			headingLevel={ 3 }
-		/>
-	);
-}
-
-export function ColorPanelDropdown( {
-	label,
-	hasValue,
-	resetValue,
-	isShownByDefault,
-	indicators,
-	tabs,
-	colorGradientControlSettings,
-	panelId,
-	className = 'block-editor-tools-panel-color-gradient-settings__item',
-} ) {
-	const currentTab = tabs.find( ( tab ) => tab.userValue !== undefined );
-	const { key: firstTabKey, ...firstTab } = tabs[ 0 ] ?? {};
-	const colorGradientDropdownButtonRef = useRef( undefined );
-	return (
-		<ToolsPanelItem
-			className={ className }
-			hasValue={ hasValue }
-			label={ label }
-			onDeselect={ resetValue }
-			isShownByDefault={ isShownByDefault }
-			panelId={ panelId }
-		>
-			<Dropdown
-				popoverProps={ popoverProps }
-				className="block-editor-tools-panel-color-gradient-settings__dropdown"
-				renderToggle={ ( { onToggle, isOpen } ) => {
-					const toggleProps = {
-						onClick: onToggle,
-						className: clsx(
-							'block-editor-panel-color-gradient-settings__dropdown',
-							{ 'is-open': isOpen }
-						),
-						'aria-expanded': isOpen,
-						ref: colorGradientDropdownButtonRef,
-					};
-
-					return (
-						<>
-							<Button { ...toggleProps } __next40pxDefaultSize>
-								<LabeledColorIndicators
-									indicators={ indicators }
-									label={ label }
-								/>
-							</Button>
-							{ hasValue() && (
-								<Button
-									__next40pxDefaultSize
-									label={ __( 'Reset' ) }
-									className="block-editor-panel-color-gradient-settings__reset"
-									size="small"
-									icon={ resetIcon }
-									onClick={ () => {
-										resetValue();
-										if ( isOpen ) {
-											onToggle();
-										}
-										// Return focus to parent button
-										colorGradientDropdownButtonRef.current?.focus();
-									} }
-								/>
-							) }
-						</>
-					);
-				} }
-				renderContent={ () => (
-					<DropdownContentWrapper paddingSize="none">
-						<div className="block-editor-panel-color-gradient-settings__dropdown-content">
-							{ tabs.length === 1 && (
-								<ColorPanelTab
-									key={ firstTabKey }
-									{ ...firstTab }
-									colorGradientControlSettings={
-										colorGradientControlSettings
-									}
-								/>
-							) }
-							{ tabs.length > 1 && (
-								<Tabs defaultTabId={ currentTab?.key }>
-									<Tabs.TabList>
-										{ tabs.map( ( tab ) => (
-											<Tabs.Tab
-												key={ tab.key }
-												tabId={ tab.key }
-											>
-												{ tab.label }
-											</Tabs.Tab>
-										) ) }
-									</Tabs.TabList>
-
-									{ tabs.map( ( tab ) => {
-										const { key: tabKey, ...restTabProps } =
-											tab;
-										return (
-											<Tabs.TabPanel
-												key={ tabKey }
-												tabId={ tabKey }
-												focusable={ false }
-											>
-												<ColorPanelTab
-													key={ tabKey }
-													{ ...restTabProps }
-													colorGradientControlSettings={
-														colorGradientControlSettings
-													}
-												/>
-											</Tabs.TabPanel>
-										);
-									} ) }
-								</Tabs>
-							) }
-						</div>
-					</DropdownContentWrapper>
-				) }
-			/>
-		</ToolsPanelItem>
-	);
-}
 
 export default function ColorPanel( {
 	as: Wrapper = ColorToolsPanel,
@@ -757,7 +571,7 @@ export default function ColorPanel( {
 			{ items.map( ( item ) => {
 				const { key, ...restItem } = item;
 				return (
-					<ColorPanelDropdown
+					<ColorGradientDropdownItem
 						key={ key }
 						{ ...restItem }
 						colorGradientControlSettings={ {

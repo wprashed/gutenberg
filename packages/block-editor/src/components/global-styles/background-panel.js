@@ -13,7 +13,7 @@ import { getValueFromVariable } from '@wordpress/global-styles-engine';
  * Internal dependencies
  */
 import BackgroundImageControl from '../background-image-control';
-import { ColorPanelDropdown } from './color-panel';
+import ColorGradientDropdownItem from './color-gradient-dropdown-item';
 import { useGradientsPerOrigin } from './hooks';
 import { useToolsPanelDropdownMenuProps } from './utils';
 import { setImmutably } from '../../utils/object';
@@ -255,7 +255,7 @@ export default function BackgroundImagePanel( {
 				</ToolsPanelItem>
 			) }
 			{ showBackgroundGradientControl && (
-				<ColorPanelDropdown
+				<ColorGradientDropdownItem
 					className="block-editor-background-panel__item"
 					label={ __( 'Gradient' ) }
 					hasValue={ () => hasBackgroundGradientValue( value ) }
