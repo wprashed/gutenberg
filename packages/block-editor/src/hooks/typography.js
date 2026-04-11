@@ -57,6 +57,7 @@ function styleToAttributes( style ) {
 	const updatedStyle = { ...omit( style, [ 'fontFamily' ] ) };
 	const fontSizeValue = style?.typography?.fontSize;
 	const fontFamilyValue = style?.typography?.fontFamily;
+	const textColorValue = style?.color?.text;
 	const fontSizeSlug =
 		typeof fontSizeValue === 'string' &&
 		fontSizeValue?.startsWith( 'var:preset|font-size|' )
@@ -67,14 +68,22 @@ function styleToAttributes( style ) {
 	)
 		? fontFamilyValue.substring( 'var:preset|font-family|'.length )
 		: undefined;
+	const textColorSlug = textColorValue?.startsWith?.( 'var:preset|color|' )
+		? textColorValue.substring( 'var:preset|color|'.length )
+		: undefined;
 	updatedStyle.typography = {
 		...omit( updatedStyle.typography, [ 'fontFamily' ] ),
 		fontSize: fontSizeSlug ? undefined : fontSizeValue,
+	};
+	updatedStyle.color = {
+		...updatedStyle.color,
+		text: textColorSlug ? undefined : textColorValue,
 	};
 	return {
 		style: cleanEmptyObject( updatedStyle ),
 		fontFamily: fontFamilySlug,
 		fontSize: fontSizeSlug,
+		textColor: textColorSlug,
 	};
 }
 
@@ -89,6 +98,12 @@ function attributesToStyle( attributes ) {
 			fontSize: attributes.fontSize
 				? 'var:preset|font-size|' + attributes.fontSize
 				: attributes.style?.typography?.fontSize,
+		},
+		color: {
+			...attributes.style?.color,
+			text: attributes.textColor
+				? 'var:preset|color|' + attributes.textColor
+				: attributes.style?.color?.text,
 		},
 	};
 }
@@ -119,7 +134,7 @@ function TypographyInspectorControl( { children, resetAllFilter } ) {
 export function TypographyPanel( { clientId, name, setAttributes, settings } ) {
 	const isEnabled = useHasTypographyPanel( settings );
 
-	const { style, fontFamily, fontSize, fitText } = useSelect(
+	const { style, fontFamily, fontSize, fitText, textColor } = useSelect(
 		( select ) => {
 			// Early return to avoid subscription when disabled.
 			if ( ! isEnabled ) {
@@ -130,19 +145,21 @@ export function TypographyPanel( { clientId, name, setAttributes, settings } ) {
 				fontFamily: _fontFamily,
 				fontSize: _fontSize,
 				fitText: _fitText,
+				textColor: _textColor,
 			} = select( blockEditorStore ).getBlockAttributes( clientId ) || {};
 			return {
 				style: _style,
 				fontFamily: _fontFamily,
 				fontSize: _fontSize,
 				fitText: _fitText,
+				textColor: _textColor,
 			};
 		},
 		[ clientId, isEnabled ]
 	);
 	const value = useMemo(
-		() => attributesToStyle( { style, fontFamily, fontSize } ),
-		[ style, fontSize, fontFamily ]
+		() => attributesToStyle( { style, fontFamily, fontSize, textColor } ),
+		[ style, fontSize, fontFamily, textColor ]
 	);
 
 	const onChange = ( newStyle ) => {
@@ -162,10 +179,18 @@ export function TypographyPanel( { clientId, name, setAttributes, settings } ) {
 		return null;
 	}
 
-	const defaultControls = getBlockSupport( name, [
+	const typographyDefaultControls = getBlockSupport( name, [
 		TYPOGRAPHY_SUPPORT_KEY,
 		'__experimentalDefaultControls',
 	] );
+	const colorDefaultControls = getBlockSupport( name, [
+		'color',
+		'__experimentalDefaultControls',
+	] );
+	const defaultControls = {
+		...typographyDefaultControls,
+		textColor: colorDefaultControls?.text,
+	};
 
 	return (
 		<StylesTypographyPanel

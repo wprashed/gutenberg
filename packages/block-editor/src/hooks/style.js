@@ -16,7 +16,7 @@ import { getCSSRules, compileCSS } from '@wordpress/style-engine';
  */
 import { BACKGROUND_SUPPORT_KEY, BackgroundImagePanel } from './background';
 import { BORDER_SUPPORT_KEY, BorderPanel, SHADOW_SUPPORT_KEY } from './border';
-import { COLOR_SUPPORT_KEY, ColorEdit } from './color';
+import { COLOR_SUPPORT_KEY, ColorEdit, ContrastCheckerEdit } from './color';
 import {
 	TypographyPanel,
 	TYPOGRAPHY_SUPPORT_KEY,
@@ -351,6 +351,7 @@ function BlockStyleControls( {
 	return (
 		<>
 			<ColorEdit { ...passedProps } />
+			<ContrastCheckerEdit { ...passedProps } />
 			<BackgroundImagePanel { ...passedProps } />
 			<TypographyPanel { ...passedProps } />
 			<BorderPanel { ...passedProps } />

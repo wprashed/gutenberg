@@ -161,7 +161,7 @@ export default function BackgroundImagePanel( {
 	as: Wrapper = BackgroundToolsPanel,
 	value,
 	onChange,
-	inheritedValue,
+	inheritedValue = value,
 	settings,
 	panelId,
 	defaultControls = DEFAULT_CONTROLS,

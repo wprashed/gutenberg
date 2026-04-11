@@ -123,6 +123,7 @@ export default function BlockColorContrastChecker( { clientId, name } ) {
 		observer.observe( blockEl, {
 			attributes: true,
 			attributeFilter: [ 'class', 'style' ],
+			subtree: true,
 		} );
 
 		return () => {

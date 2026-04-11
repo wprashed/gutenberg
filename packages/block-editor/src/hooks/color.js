@@ -260,6 +260,27 @@ function ColorInspectorControl( { children, resetAllFilter } ) {
 	);
 }
 
+export function ContrastCheckerEdit( { clientId, name, settings } ) {
+	const enableContrastChecking =
+		Platform.OS === 'web' &&
+		( settings?.color?.text || settings?.color?.link ) &&
+		false !==
+			getBlockSupport( name, [
+				COLOR_SUPPORT_KEY,
+				'enableContrastChecker',
+			] );
+
+	if ( ! enableContrastChecking ) {
+		return null;
+	}
+
+	return (
+		<InspectorControls group="background">
+			<BlockColorContrastChecker clientId={ clientId } name={ name } />
+		</InspectorControls>
+	);
+}
+
 export function ColorEdit( {
 	clientId,
 	name,
@@ -316,19 +337,6 @@ export function ColorEdit( {
 				'__experimentalDefaultControls',
 		  ] );
 
-	const enableContrastChecking =
-		Platform.OS === 'web' &&
-		! value?.color?.gradient &&
-		( settings?.color?.text || settings?.color?.link ) &&
-		// Contrast checking is enabled by default.
-		// Deactivating it requires `enableContrastChecker` to have
-		// an explicit value of `false`.
-		false !==
-			getBlockSupport( name, [
-				COLOR_SUPPORT_KEY,
-				'enableContrastChecker',
-			] );
-
 	// Use provided wrapper or default to ColorInspectorControl
 	const Wrapper = asWrapper || ColorInspectorControl;
 
@@ -348,14 +356,7 @@ export function ColorEdit( {
 					'enableContrastChecker',
 				] )
 			}
-		>
-			{ enableContrastChecking && (
-				<BlockColorContrastChecker
-					clientId={ clientId }
-					name={ name }
-				/>
-			) }
-		</StylesColorPanel>
+		/>
 	);
 }
 
