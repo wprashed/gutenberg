@@ -30,11 +30,22 @@ test.describe( 'Contrast Checker', () => {
 				name: 'Editor settings',
 			} );
 
-			const textButton = editorSettings.getByRole( 'button', {
-				name: 'Text',
+			const typographyPanel = editorSettings
+				.locator( '.components-tools-panel' )
+				.filter( {
+					has: page.getByRole( 'heading', { name: 'Typography' } ),
+				} );
+			const backgroundPanel = editorSettings
+				.locator( '.components-tools-panel' )
+				.filter( {
+					has: page.getByRole( 'heading', { name: 'Background' } ),
+				} );
+
+			const textButton = typographyPanel.getByRole( 'button', {
+				name: 'Color',
 				exact: true,
 			} );
-			const backgroundButton = editorSettings.getByRole( 'button', {
+			const backgroundButton = backgroundPanel.getByRole( 'button', {
 				name: 'Color',
 				exact: true,
 			} );
@@ -65,8 +76,14 @@ test.describe( 'Contrast Checker', () => {
 				name: 'Editor settings',
 			} );
 
-			const textButton = editorSettings.getByRole( 'button', {
-				name: 'Text',
+			const typographyPanel = editorSettings
+				.locator( '.components-tools-panel' )
+				.filter( {
+					has: page.getByRole( 'heading', { name: 'Typography' } ),
+				} );
+
+			const textButton = typographyPanel.getByRole( 'button', {
+				name: 'Color',
 				exact: true,
 			} );
 			await expect( textButton ).toBeVisible();
@@ -100,11 +117,22 @@ test.describe( 'Contrast Checker', () => {
 			name: 'Editor settings',
 		} );
 
-		const textButton = editorSettings.getByRole( 'button', {
-			name: 'Text',
+		const typographyPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} );
+		const backgroundPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} );
+
+		const textButton = typographyPanel.getByRole( 'button', {
+			name: 'Color',
 			exact: true,
 		} );
-		const backgroundButton = editorSettings.getByRole( 'button', {
+		const backgroundButton = backgroundPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
 		} );
@@ -142,12 +170,23 @@ test.describe( 'Contrast Checker', () => {
 			name: 'Editor settings',
 		} );
 
+		const typographyPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} );
+		const backgroundPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} );
+
 		// Set poor contrast: black text on black background
-		const textButton = editorSettings.getByRole( 'button', {
-			name: 'Text',
+		const textButton = typographyPanel.getByRole( 'button', {
+			name: 'Color',
 			exact: true,
 		} );
-		const backgroundButton = editorSettings.getByRole( 'button', {
+		const backgroundButton = backgroundPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
 		} );
@@ -195,8 +234,14 @@ test.describe( 'Contrast Checker', () => {
 			name: 'Editor settings',
 		} );
 
+		const backgroundPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} );
+
 		// Set background to black first
-		const backgroundButton = editorSettings.getByRole( 'button', {
+		const backgroundButton = backgroundPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
 		} );
@@ -242,9 +287,20 @@ test.describe( 'Contrast Checker', () => {
 			name: 'Editor settings',
 		} );
 
+		const typographyPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} );
+		const backgroundPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} );
+
 		// Set text color to black
-		const textButton = editorSettings.getByRole( 'button', {
-			name: 'Text',
+		const textButton = typographyPanel.getByRole( 'button', {
+			name: 'Color',
 			exact: true,
 		} );
 		await expect( textButton ).toBeVisible();
@@ -253,7 +309,7 @@ test.describe( 'Contrast Checker', () => {
 		await textButton.click();
 
 		// Set background to black (poor contrast with black text)
-		const backgroundButton = editorSettings.getByRole( 'button', {
+		const backgroundButton = backgroundPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
 		} );
@@ -284,9 +340,20 @@ test.describe( 'Contrast Checker', () => {
 			name: 'Editor settings',
 		} );
 
+		const typographyPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} );
+		const backgroundPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} );
+
 		// Set text color to black
-		const textButton = editorSettings.getByRole( 'button', {
-			name: 'Text',
+		const textButton = typographyPanel.getByRole( 'button', {
+			name: 'Color',
 			exact: true,
 		} );
 		await expect( textButton ).toBeVisible();
@@ -295,7 +362,7 @@ test.describe( 'Contrast Checker', () => {
 		await textButton.click();
 
 		// Set background to white (good contrast with black text)
-		const backgroundButton = editorSettings.getByRole( 'button', {
+		const backgroundButton = backgroundPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
 		} );

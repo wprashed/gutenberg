@@ -166,6 +166,7 @@ function TypographyToolsPanel( {
 			label={ __( 'Typography' ) }
 			resetAll={ resetAll }
 			panelId={ panelId }
+			__experimentalFirstVisibleItemClass="first"
 			dropdownMenuProps={ dropdownMenuProps }
 		>
 			{ children }
@@ -556,7 +557,8 @@ export default function TypographyPanel( {
 		>
 			{ hasTextColorEnabled && (
 				<ColorGradientDropdownItem
-					label={ __( 'Text' ) }
+					className="block-editor-typography-panel__color-item"
+					label={ __( 'Color' ) }
 					hasValue={ hasTextColorValue }
 					resetValue={ resetTextColor }
 					isShownByDefault={ defaultControls.textColor }
@@ -564,7 +566,7 @@ export default function TypographyPanel( {
 					tabs={ [
 						{
 							key: 'text',
-							label: __( 'Text' ),
+							label: __( 'Color' ),
 							inheritedValue: textColor,
 							setValue: setTextColor,
 							userValue: userTextColor,

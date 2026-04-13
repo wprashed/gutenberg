@@ -344,13 +344,22 @@ test.describe( 'Buttons', () => {
 		await page.keyboard.type( 'Content' );
 		await editor.openDocumentSettingsSidebar();
 
-		await page
-			.getByRole( 'region', { name: 'Editor settings' } )
-			.getByRole( 'button', { name: 'Text', exact: true } )
+		const editorSettings = page.getByRole( 'region', {
+			name: 'Editor settings',
+		} );
+		await editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} )
+			.getByRole( 'button', { name: 'Color', exact: true } )
 			.click();
 		await page.click( 'role=option[name="Cyan bluish gray"i]' );
-		await page
-			.getByRole( 'region', { name: 'Editor settings' } )
+		await editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} )
 			.getByRole( 'button', { name: 'Color', exact: true } )
 			.click();
 		await page.click( 'role=option[name="Vivid red"i]' );
@@ -371,15 +380,24 @@ test.describe( 'Buttons', () => {
 		await page.keyboard.type( 'Content' );
 		await editor.openDocumentSettingsSidebar();
 
-		await page
-			.getByRole( 'region', { name: 'Editor settings' } )
-			.getByRole( 'button', { name: 'Text', exact: true } )
+		const editorSettings = page.getByRole( 'region', {
+			name: 'Editor settings',
+		} );
+		await editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} )
+			.getByRole( 'button', { name: 'Color', exact: true } )
 			.click();
 		await page.click( 'role=button[name="Custom color picker"i]' );
 		await page.fill( 'role=textbox[name="Hex color"i]', 'ff0000' );
 
-		await page
-			.getByRole( 'region', { name: 'Editor settings' } )
+		await editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} )
 			.getByRole( 'button', { name: 'Color', exact: true } )
 			.click();
 		await page.click( 'role=button[name="Custom color picker"i]' );

@@ -91,13 +91,26 @@ test.describe( 'Navigation colors', () => {
 		// In the sidebar inspector we add a link color and link hover color to the group block.
 		await editor.openDocumentSettingsSidebar();
 		await page.getByRole( 'tab', { name: 'Styles' } ).click();
-		await page.getByRole( 'button', { name: 'Text' } ).click();
+		const editorSettings = page.getByRole( 'region', {
+			name: 'Editor settings',
+		} );
+		await editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} )
+			.getByRole( 'button', { name: 'Color', exact: true } )
+			.click();
 		await page
 			.getByRole( 'option', { name: 'White' } )
 			.click( { force: true } );
 
-		await page
-			.getByRole( 'button', { name: 'Background', exact: true } )
+		await editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} )
+			.getByRole( 'button', { name: 'Color', exact: true } )
 			.click();
 		await page
 			.getByRole( 'option', { name: 'Black' } )

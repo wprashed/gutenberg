@@ -74,8 +74,12 @@ $swatch-gap: 12px;
 * to maintain the order of `ToolsPanel` controls, each `ToolsPanelItem`
 * must at least render a placeholder which would otherwise interfere
 * with the `:last-child` styles.
+*
+* Applied via the shared `block-editor-color-gradient-item` class on
+* color/gradient dropdown items across the Color, Background, and
+* Typography panels.
 */
-.block-editor-tools-panel-color-gradient-settings__item {
+.block-editor-color-gradient-item {
 	padding: 0;
 	max-width: 100%;
 	position: relative;
@@ -87,7 +91,6 @@ $swatch-gap: 12px;
 
 	// Identify the first visible instance as placeholder items will not have this class.
 	&:nth-child(1 of &) {
-		margin-top: $grid-unit-30;
 		border-top-left-radius: $radius-small;
 		border-top-right-radius: $radius-small;
 		border-top: 1px solid $gray-300;

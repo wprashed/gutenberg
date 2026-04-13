@@ -356,7 +356,7 @@ export default function BackgroundImagePanel( {
 		>
 			{ showBackgroundImageControl && (
 				<ToolsPanelItem
-					className="block-editor-background-panel__item"
+					className="block-editor-color-gradient-item block-editor-background-panel__item"
 					hasValue={ () => hasBackgroundImageValue( value ) }
 					label={ __( 'Image' ) }
 					onDeselect={ resetBackground }

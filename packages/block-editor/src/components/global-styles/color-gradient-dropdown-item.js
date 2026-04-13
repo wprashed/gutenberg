@@ -95,7 +95,7 @@ export default function ColorGradientDropdownItem( {
 	const colorGradientDropdownButtonRef = useRef( undefined );
 	return (
 		<ToolsPanelItem
-			className={ className }
+			className={ clsx( 'block-editor-color-gradient-item', className ) }
 			hasValue={ hasValue }
 			label={ label }
 			onDeselect={ resetValue }

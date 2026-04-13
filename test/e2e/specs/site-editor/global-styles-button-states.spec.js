@@ -53,6 +53,11 @@ test.describe( 'Global Styles - Button States', () => {
 			.click();
 
 		await page
+			.getByRole( 'region', { name: 'Editor settings' } )
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} )
 			.getByRole( 'button', { name: 'Color', exact: true } )
 			.click();
 
