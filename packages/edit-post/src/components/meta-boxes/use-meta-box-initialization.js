@@ -12,6 +12,8 @@ import { useEffect } from '@wordpress/element';
 import { store as editPostStore } from '../../store';
 import { unlock } from '../../lock-unlock';
 
+const EMPTY_ARRAY = [];
+
 /**
  * Initializes WordPress `postboxes` script and the logic for saving meta boxes.
  *
@@ -35,7 +37,7 @@ export const useMetaBoxInitialization = ( enabled ) => {
 				: false,
 			allMetaBoxes: enabled
 				? select( editPostStore ).getAllMetaBoxes()
-				: [],
+				: EMPTY_ARRAY,
 			rtcCompatibleIds:
 				select( editPostStore ).getRtcCompatibleMetaBoxIds(),
 		} ),
