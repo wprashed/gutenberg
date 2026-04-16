@@ -66,6 +66,11 @@ function StyleInspectorSlots( {
 			/>
 			<InspectorControls.Slot group="border" label={ borderPanelLabel } />
 			<InspectorControls.Slot group="styles" />
+			<InspectorControls.Slot
+				group="elements"
+				label={ __( 'Elements' ) }
+				className="elements-block-support-panel__inner-wrapper"
+			/>
 			{ showPositionControls && <PositionControls /> }
 			{ showBindingsControls && (
 				<InspectorControls.Slot group="bindings" />

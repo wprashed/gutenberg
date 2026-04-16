@@ -12,7 +12,7 @@ import InspectorControls from '../inspector-controls';
 import { useBorderPanelLabel } from '../../hooks/border';
 import { useBlockSettings } from '../../hooks/utils';
 import { store as blockEditorStore } from '../../store';
-import { ColorEdit } from '../../hooks/color';
+import { ElementsEdit } from '../../hooks/elements';
 import { ColorToolsPanel } from '../global-styles/color-panel';
 
 function SectionBlockColorControls( {
@@ -42,16 +42,14 @@ function SectionBlockColorControls( {
 	};
 
 	return (
-		<ColorEdit
+		<ElementsEdit
 			clientId={ clientId }
 			name={ blockName }
 			settings={ settings }
 			setAttributes={ setAttributes }
 			asWrapper={ ColorToolsPanel }
-			label={ __( 'Color' ) }
+			label={ __( 'Elements' ) }
 			defaultControls={ {
-				text: true,
-				background: true,
 				button: hasButtons,
 				heading: hasHeading,
 			} }
@@ -72,11 +70,22 @@ const StylesTab = ( {
 		<>
 			{ hasBlockStyles && <BlockStyles clientId={ clientId } /> }
 			{ isSectionBlock && (
-				<SectionBlockColorControls
-					blockName={ blockName }
-					clientId={ clientId }
-					contentClientIds={ contentClientIds }
-				/>
+				<>
+					<SectionBlockColorControls
+						blockName={ blockName }
+						clientId={ clientId }
+						contentClientIds={ contentClientIds }
+					/>
+					<InspectorControls.Slot
+						group="background"
+						label={ __( 'Background' ) }
+						className="background-block-support-panel__inner-wrapper"
+					/>
+					<InspectorControls.Slot
+						group="typography"
+						label={ __( 'Typography' ) }
+					/>
+				</>
 			) }
 			{ ! isSectionBlock && (
 				<>
@@ -104,6 +113,11 @@ const StylesTab = ( {
 						label={ borderPanelLabel }
 					/>
 					<InspectorControls.Slot group="styles" />
+					<InspectorControls.Slot
+						group="elements"
+						label={ __( 'Elements' ) }
+						className="elements-block-support-panel__inner-wrapper"
+					/>
 				</>
 			) }
 		</>

@@ -344,14 +344,6 @@ function ScreenBlock( { name, variation }: ScreenBlockProps ) {
 					</VStack>
 				</div>
 			) }
-			{ hasColorPanel && (
-				<StylesColorPanel
-					inheritedValue={ inheritedStyle }
-					value={ style }
-					onChange={ setStyle }
-					settings={ settings }
-				/>
-			) }
 			{ hasBackgroundPanel && (
 				<StylesBackgroundPanel
 					inheritedValue={ inheritedStyle }
@@ -394,6 +386,14 @@ function ScreenBlock( { name, variation }: ScreenBlockProps ) {
 					onChange={ setStyle }
 					settings={ settings }
 					includeLayoutControls
+				/>
+			) }
+			{ hasColorPanel && (
+				<StylesColorPanel
+					inheritedValue={ inheritedStyle }
+					value={ style }
+					onChange={ setStyle }
+					settings={ settings }
 				/>
 			) }
 			{ hasImageSettingsPanel && (
