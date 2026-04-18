@@ -16,6 +16,7 @@ import { useCallback } from '@wordpress/element';
 import InspectorControls from '../components/inspector-controls';
 import { cleanEmptyObject } from './utils';
 import { store as blockEditorStore } from '../store';
+import BlockColorContrastChecker from './contrast-checker';
 import {
 	default as StylesBackgroundPanel,
 	useHasBackgroundPanel,
@@ -360,6 +361,12 @@ export function BackgroundImagePanel( {
 			onChange={ onChange }
 			defaultControls={ defaultControls }
 			value={ styleValue }
+			colorContrastChecker={
+				<BlockColorContrastChecker
+					clientId={ clientId }
+					name={ name }
+				/>
+			}
 		/>
 	);
 }

@@ -21,8 +21,6 @@ import { __experimentalGetGradientClass } from '../components/gradients';
 import { transformStyles, shouldSkipSerialization } from './utils';
 import { getBackgroundImageClasses } from './background';
 import { useSettings } from '../components/use-settings';
-import InspectorControls from '../components/inspector-controls';
-import BlockColorContrastChecker from './contrast-checker';
 
 export const COLOR_SUPPORT_KEY = 'color';
 
@@ -177,27 +175,6 @@ export function addSaveProps( props, blockNameOrType, attributes ) {
 	props.className = newClassName ? newClassName : undefined;
 
 	return props;
-}
-
-export function ContrastCheckerEdit( { clientId, name, settings } ) {
-	const enableContrastChecking =
-		Platform.OS === 'web' &&
-		( settings?.color?.text || settings?.color?.link ) &&
-		false !==
-			getBlockSupport( name, [
-				COLOR_SUPPORT_KEY,
-				'enableContrastChecker',
-			] );
-
-	if ( ! enableContrastChecking ) {
-		return null;
-	}
-
-	return (
-		<InspectorControls group="background">
-			<BlockColorContrastChecker clientId={ clientId } name={ name } />
-		</InspectorControls>
-	);
 }
 
 function useBlockProps( {

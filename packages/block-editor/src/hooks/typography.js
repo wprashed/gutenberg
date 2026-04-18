@@ -21,6 +21,7 @@ import { TEXT_ALIGN_SUPPORT_KEY } from './text-align';
 import { FIT_TEXT_SUPPORT_KEY } from './fit-text';
 import { cleanEmptyObject } from './utils';
 import { store as blockEditorStore } from '../store';
+import BlockColorContrastChecker from './contrast-checker';
 
 function omit( object, keys ) {
 	return Object.fromEntries(
@@ -200,6 +201,12 @@ export function TypographyPanel( { clientId, name, setAttributes, settings } ) {
 			value={ value }
 			onChange={ onChange }
 			defaultControls={ defaultControls }
+			colorContrastChecker={
+				<BlockColorContrastChecker
+					clientId={ clientId }
+					name={ name }
+				/>
+			}
 		/>
 	);
 }

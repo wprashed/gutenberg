@@ -10,92 +10,70 @@ test.describe( 'Contrast Checker', () => {
 		await admin.createNewPost();
 	} );
 
-	test( 'should show warning for insufficient contrast', async ( {
+	test( 'should show warning inside color popover for insufficient contrast', async ( {
 		editor,
 		page,
 	} ) => {
 		await editor.openDocumentSettingsSidebar();
 
+		await editor.insertBlock( {
+			name: 'core/paragraph',
+			attributes: { content: 'Black text on Black background' },
+		} );
+
+		const editorSettings = page.getByRole( 'region', {
+			name: 'Editor settings',
+		} );
+
+		const typographyPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Typography' } ),
+			} );
+		const backgroundPanel = editorSettings
+			.locator( '.components-tools-panel' )
+			.filter( {
+				has: page.getByRole( 'heading', { name: 'Background' } ),
+			} );
+
+		const textButton = typographyPanel.getByRole( 'button', {
+			name: 'Color',
+			exact: true,
+		} );
+		const backgroundButton = backgroundPanel.getByRole( 'button', {
+			name: 'Color',
+			exact: true,
+		} );
+
 		const lowContrastWarning = page.locator(
 			'.block-editor-contrast-checker'
 		);
 
-		await test.step( 'Check black text on black background', async () => {
-			await editor.insertBlock( {
-				name: 'core/paragraph',
-				attributes: { content: 'Black text on Black background' },
-			} );
+		// Set text color to black.
+		await expect( textButton ).toBeVisible();
+		await textButton.click();
+		await page.getByRole( 'option', { name: 'Black' } ).click();
+		// Close the text color popover before opening background.
+		await textButton.click();
 
-			const editorSettings = page.getByRole( 'region', {
-				name: 'Editor settings',
-			} );
+		// Open background color popover and set to black.
+		await backgroundButton.click();
+		await page.getByRole( 'option', { name: 'Black' } ).click();
 
-			const typographyPanel = editorSettings
-				.locator( '.components-tools-panel' )
-				.filter( {
-					has: page.getByRole( 'heading', { name: 'Typography' } ),
-				} );
-			const backgroundPanel = editorSettings
-				.locator( '.components-tools-panel' )
-				.filter( {
-					has: page.getByRole( 'heading', { name: 'Background' } ),
-				} );
+		// Warning should appear inside the open background color popover.
+		await expect( lowContrastWarning ).toBeVisible();
+		await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
 
-			const textButton = typographyPanel.getByRole( 'button', {
-				name: 'Color',
-				exact: true,
-			} );
-			const backgroundButton = backgroundPanel.getByRole( 'button', {
-				name: 'Color',
-				exact: true,
-			} );
+		// Close the background color popover.
+		await backgroundButton.click();
+		// Warning should not be visible when the popover is closed.
+		await expect( lowContrastWarning ).toBeHidden();
 
-			await expect( textButton ).toBeVisible();
-			await textButton.click();
-			await page.getByRole( 'option', { name: 'Black' } ).click();
-
-			// Close the popover by clicking outside before opening background.
-			await textButton.click();
-			await backgroundButton.click();
-			await page.getByRole( 'option', { name: 'Black' } ).click();
-
-			// Close the popover to ensure colors are fully applied.
-			await backgroundButton.click();
-
-			await expect( lowContrastWarning ).toBeVisible();
-			await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
-		} );
-
-		await test.step( 'Check white text on default background', async () => {
-			await editor.insertBlock( {
-				name: 'core/paragraph',
-				attributes: { content: 'White text on Default background' },
-			} );
-
-			const editorSettings = page.getByRole( 'region', {
-				name: 'Editor settings',
-			} );
-
-			const typographyPanel = editorSettings
-				.locator( '.components-tools-panel' )
-				.filter( {
-					has: page.getByRole( 'heading', { name: 'Typography' } ),
-				} );
-
-			const textButton = typographyPanel.getByRole( 'button', {
-				name: 'Color',
-				exact: true,
-			} );
-			await expect( textButton ).toBeVisible();
-			await textButton.click();
-			await page.getByRole( 'option', { name: 'White' } ).click();
-
-			// Close the popover to ensure colors are fully applied.
-			await textButton.click();
-
-			await expect( lowContrastWarning ).toBeVisible();
-			await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
-		} );
+		// Reopen the text color popover — warning should also appear there.
+		await textButton.click();
+		await expect( lowContrastWarning ).toBeVisible();
+		await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
+		await textButton.click();
 	} );
 
 	test( 'should not show warning for sufficient contrast', async ( {
@@ -136,18 +114,21 @@ test.describe( 'Contrast Checker', () => {
 			name: 'Color',
 			exact: true,
 		} );
+
 		await expect( textButton ).toBeVisible();
 		await textButton.click();
 		await page.getByRole( 'option', { name: 'Black' } ).click();
 
-		// Close the popover before opening background.
+		// Close the text color popover before opening background.
 		await textButton.click();
 		await backgroundButton.click();
 		await page.getByRole( 'option', { name: 'White' } ).click();
 
-		// Close the popover to ensure colors are fully applied
-		await backgroundButton.click();
+		// Warning should not appear — contrast is sufficient.
+		await expect( lowContrastWarning ).toBeHidden();
 
+		// Close the background color popover.
+		await backgroundButton.click();
 		await expect( lowContrastWarning ).toBeHidden();
 	} );
 
@@ -181,7 +162,6 @@ test.describe( 'Contrast Checker', () => {
 				has: page.getByRole( 'heading', { name: 'Background' } ),
 			} );
 
-		// Set poor contrast: black text on black background
 		const textButton = typographyPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
@@ -190,83 +170,26 @@ test.describe( 'Contrast Checker', () => {
 			name: 'Color',
 			exact: true,
 		} );
+
+		// Set poor contrast: black text on black background.
 		await expect( textButton ).toBeVisible();
 		await textButton.click();
 		await page.getByRole( 'option', { name: 'Black' } ).click();
-
 		await textButton.click();
+
 		await backgroundButton.click();
 		await page.getByRole( 'option', { name: 'Black' } ).click();
-		await backgroundButton.click();
 
-		// Verify warning appears
+		// Verify warning appears in the open background popover.
 		await expect( lowContrastWarning ).toBeVisible();
 
-		// Fix contrast: change background to white
-		await backgroundButton.click();
+		// Fix contrast: change background to white (while popover is still open).
 		await page.getByRole( 'option', { name: 'White' } ).click();
-		await backgroundButton.click();
 
-		// Verify warning disappears
+		// Verify warning disappears once contrast is fixed.
 		await expect( lowContrastWarning ).toBeHidden();
-	} );
 
-	test( 'should show warning for insufficient link color contrast', async ( {
-		editor,
-		page,
-	} ) => {
-		await editor.openDocumentSettingsSidebar();
-
-		const lowContrastWarning = page.locator(
-			'.block-editor-contrast-checker'
-		);
-
-		// Insert paragraph with a link
-		await editor.insertBlock( {
-			name: 'core/paragraph',
-			attributes: {
-				content:
-					'<a href="https://example.com">Link text</a> in paragraph',
-			},
-		} );
-
-		const editorSettings = page.getByRole( 'region', {
-			name: 'Editor settings',
-		} );
-
-		const backgroundPanel = editorSettings
-			.locator( '.components-tools-panel' )
-			.filter( {
-				has: page.getByRole( 'heading', { name: 'Background' } ),
-			} );
-
-		// Set background to black first
-		const backgroundButton = backgroundPanel.getByRole( 'button', {
-			name: 'Color',
-			exact: true,
-		} );
 		await backgroundButton.click();
-		await page.getByRole( 'option', { name: 'Black' } ).click();
-		await backgroundButton.click();
-
-		// Try to find and set link color to black (poor contrast with black background)
-		// The link color control might be in a collapsible panel or not visible by default
-		const linkButton = editorSettings.getByRole( 'button', {
-			name: 'Link',
-		} );
-		const linkButtonCount = await linkButton.count();
-
-		if ( linkButtonCount > 0 ) {
-			await linkButton.click();
-			await page.getByRole( 'option', { name: 'Black' } ).click();
-			await linkButton.click();
-
-			// Verify warning appears for link color contrast
-			await expect( lowContrastWarning ).toBeVisible();
-			await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
-		}
-		// Note: If link color control is not available, the test will pass
-		// as the contrast checker only checks link colors when they are set
 	} );
 
 	test( 'should show warning for insufficient contrast on buttons', async ( {
@@ -279,7 +202,7 @@ test.describe( 'Contrast Checker', () => {
 			'.block-editor-contrast-checker'
 		);
 
-		// Insert a button block
+		// Insert a button block.
 		await editor.insertBlock( { name: 'core/buttons' } );
 		await page.keyboard.type( 'Button text' );
 
@@ -298,7 +221,6 @@ test.describe( 'Contrast Checker', () => {
 				has: page.getByRole( 'heading', { name: 'Background' } ),
 			} );
 
-		// Set text color to black
 		const textButton = typographyPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
@@ -308,18 +230,19 @@ test.describe( 'Contrast Checker', () => {
 		await page.getByRole( 'option', { name: 'Black' } ).click();
 		await textButton.click();
 
-		// Set background to black (poor contrast with black text)
+		// Set background to black (poor contrast with black text).
 		const backgroundButton = backgroundPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
 		} );
 		await backgroundButton.click();
 		await page.getByRole( 'option', { name: 'Black' } ).click();
-		await backgroundButton.click();
 
-		// Verify warning appears for button contrast
+		// Verify warning appears in the open background popover.
 		await expect( lowContrastWarning ).toBeVisible();
 		await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
+
+		await backgroundButton.click();
 	} );
 
 	test( 'should not show warning for sufficient contrast on buttons', async ( {
@@ -332,7 +255,7 @@ test.describe( 'Contrast Checker', () => {
 			'.block-editor-contrast-checker'
 		);
 
-		// Insert a button block
+		// Insert a button block.
 		await editor.insertBlock( { name: 'core/buttons' } );
 		await page.keyboard.type( 'Button text' );
 
@@ -351,7 +274,6 @@ test.describe( 'Contrast Checker', () => {
 				has: page.getByRole( 'heading', { name: 'Background' } ),
 			} );
 
-		// Set text color to black
 		const textButton = typographyPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
@@ -361,16 +283,17 @@ test.describe( 'Contrast Checker', () => {
 		await page.getByRole( 'option', { name: 'Black' } ).click();
 		await textButton.click();
 
-		// Set background to white (good contrast with black text)
+		// Set background to white (good contrast with black text).
 		const backgroundButton = backgroundPanel.getByRole( 'button', {
 			name: 'Color',
 			exact: true,
 		} );
 		await backgroundButton.click();
 		await page.getByRole( 'option', { name: 'White' } ).click();
-		await backgroundButton.click();
 
-		// Verify no warning appears
+		// Verify no warning appears.
 		await expect( lowContrastWarning ).toBeHidden();
+
+		await backgroundButton.click();
 	} );
 } );

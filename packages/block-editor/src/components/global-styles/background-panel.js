@@ -167,6 +167,7 @@ export default function BackgroundImagePanel( {
 	defaultControls = DEFAULT_CONTROLS,
 	defaultValues = {},
 	headerLabel = __( 'Background' ),
+	colorContrastChecker,
 } ) {
 	const colors = useColorsPerOrigin( settings );
 	const gradients = useGradientsPerOrigin( settings );
@@ -394,6 +395,7 @@ export default function BackgroundImagePanel( {
 						colors,
 						disableCustomColors: ! areCustomSolidsEnabled,
 					} }
+					contrastChecker={ colorContrastChecker }
 					panelId={ panelId }
 				/>
 			) }

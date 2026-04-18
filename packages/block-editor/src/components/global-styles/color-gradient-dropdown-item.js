@@ -87,6 +87,7 @@ export default function ColorGradientDropdownItem( {
 	indicators,
 	tabs,
 	colorGradientControlSettings,
+	contrastChecker,
 	panelId,
 	className = 'block-editor-tools-panel-color-gradient-settings__item',
 } ) {
@@ -190,6 +191,7 @@ export default function ColorGradientDropdownItem( {
 									} ) }
 								</Tabs>
 							) }
+							{ contrastChecker }
 						</div>
 					</DropdownContentWrapper>
 				) }

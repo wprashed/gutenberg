@@ -198,6 +198,7 @@ export default function TypographyPanel( {
 	panelId,
 	defaultControls = DEFAULT_CONTROLS,
 	isGlobalStyles = false,
+	colorContrastChecker,
 } ) {
 	const decodeValue = ( rawValue ) =>
 		getValueFromVariable( { settings }, '', rawValue );
@@ -576,6 +577,7 @@ export default function TypographyPanel( {
 						colors,
 						disableCustomColors: ! areCustomSolidsEnabled,
 					} }
+					contrastChecker={ colorContrastChecker }
 					panelId={ panelId }
 				/>
 			) }
