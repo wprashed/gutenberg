@@ -20,7 +20,7 @@ import {
 	Button,
 	privateApis as componentsPrivateApis,
 } from '@wordpress/components';
-import { useRef } from '@wordpress/element';
+import { useRef, useState, useEffect, createPortal } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { reset as resetIcon } from '@wordpress/icons';
 
@@ -31,6 +31,99 @@ import ColorGradientControl from '../colors-gradients/control';
 import { unlock } from '../../lock-unlock';
 
 const { Tabs } = unlock( componentsPrivateApis );
+
+/**
+ * @typedef {Object} DropdownContentProps
+ * @property {Array}           tabs                         Tab configurations to render.
+ * @property {Object}          currentTab                   The currently active tab.
+ * @property {string}          firstTabKey                  Key of the first tab.
+ * @property {Object}          firstTab                     Props for the first tab (without its key).
+ * @property {Object}          colorGradientControlSettings Settings passed to ColorGradientControl.
+ * @property {React.ReactNode} contrastChecker              Optional contrast-checker node to portal.
+ */
+
+/**
+ * Renders the dropdown content and portals the contrastChecker into the
+ * `.components-color-palette__custom-color-wrapper` element so the warning
+ * overlays only the custom-color swatch area.
+ *
+ * @param {DropdownContentProps} props
+ */
+function DropdownContent( {
+	tabs,
+	currentTab,
+	firstTabKey,
+	firstTab,
+	colorGradientControlSettings,
+	contrastChecker,
+} ) {
+	const contentRef = useRef( null );
+	const [ portalContainer, setPortalContainer ] = useState( null );
+
+	// Locate the custom-color-wrapper once after mount. The element is always
+	// rendered by ColorGradientTab on first paint, so [] deps are sufficient.
+	useEffect( () => {
+		if ( ! contentRef.current ) {
+			return;
+		}
+		const wrapper = contentRef.current.querySelector(
+			'.components-color-palette__custom-color-wrapper'
+		);
+		setPortalContainer( wrapper || null );
+	}, [] );
+
+	return (
+		<DropdownContentWrapper paddingSize="none">
+			<div
+				ref={ contentRef }
+				className="block-editor-panel-color-gradient-settings__dropdown-content"
+			>
+				{ tabs.length === 1 && (
+					<ColorGradientTab
+						key={ firstTabKey }
+						{ ...firstTab }
+						colorGradientControlSettings={
+							colorGradientControlSettings
+						}
+					/>
+				) }
+				{ tabs.length > 1 && (
+					<Tabs defaultTabId={ currentTab?.key }>
+						<Tabs.TabList>
+							{ tabs.map( ( tab ) => (
+								<Tabs.Tab key={ tab.key } tabId={ tab.key }>
+									{ tab.label }
+								</Tabs.Tab>
+							) ) }
+						</Tabs.TabList>
+
+						{ tabs.map( ( tab ) => {
+							const { key: tabKey, ...restTabProps } = tab;
+							return (
+								<Tabs.TabPanel
+									key={ tabKey }
+									tabId={ tabKey }
+									focusable={ false }
+								>
+									<ColorGradientTab
+										key={ tabKey }
+										{ ...restTabProps }
+										colorGradientControlSettings={
+											colorGradientControlSettings
+										}
+									/>
+								</Tabs.TabPanel>
+							);
+						} ) }
+					</Tabs>
+				) }
+				{ portalContainer && contrastChecker
+					? createPortal( contrastChecker, portalContainer )
+					: null }
+			</div>
+		</DropdownContentWrapper>
+	);
+}
 
 const popoverProps = {
 	placement: 'left-start',
@@ -146,54 +239,16 @@ export default function ColorGradientDropdownItem( {
 					);
 				} }
 				renderContent={ () => (
-					<DropdownContentWrapper paddingSize="none">
-						<div className="block-editor-panel-color-gradient-settings__dropdown-content">
-							{ tabs.length === 1 && (
-								<ColorGradientTab
-									key={ firstTabKey }
-									{ ...firstTab }
-									colorGradientControlSettings={
-										colorGradientControlSettings
-									}
-								/>
-							) }
-							{ tabs.length > 1 && (
-								<Tabs defaultTabId={ currentTab?.key }>
-									<Tabs.TabList>
-										{ tabs.map( ( tab ) => (
-											<Tabs.Tab
-												key={ tab.key }
-												tabId={ tab.key }
-											>
-												{ tab.label }
-											</Tabs.Tab>
-										) ) }
-									</Tabs.TabList>
-
-									{ tabs.map( ( tab ) => {
-										const { key: tabKey, ...restTabProps } =
-											tab;
-										return (
-											<Tabs.TabPanel
-												key={ tabKey }
-												tabId={ tabKey }
-												focusable={ false }
-											>
-												<ColorGradientTab
-													key={ tabKey }
-													{ ...restTabProps }
-													colorGradientControlSettings={
-														colorGradientControlSettings
-													}
-												/>
-											</Tabs.TabPanel>
-										);
-									} ) }
-								</Tabs>
-							) }
-							{ contrastChecker }
-						</div>
-					</DropdownContentWrapper>
+					<DropdownContent
+						tabs={ tabs }
+						currentTab={ currentTab }
+						firstTabKey={ firstTabKey }
+						firstTab={ firstTab }
+						colorGradientControlSettings={
+							colorGradientControlSettings
+						}
+						contrastChecker={ contrastChecker }
+					/>
 				) }
 			/>
 		</ToolsPanelItem>

@@ -63,6 +63,39 @@ $swatch-gap: 12px;
 	}
 }
 
+// Warning overlay shown inside the custom-color swatch area of the color
+// picker popover when the selected color combination has insufficient contrast.
+// Portalled into `.components-color-palette__custom-color-wrapper` (which
+// already has `position: relative`) so it covers only that element without
+// affecting the rest of the popover's layout.
+.block-editor-color-contrast-warning {
+	position: absolute;
+	top: $grid-unit-10;
+	inset-inline-end: $grid-unit-10;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: $grid-unit-30;
+	height: $grid-unit-30;
+	background-color: $alert-yellow;
+	border-radius: 50%;
+	cursor: default;
+	border: none;
+	padding: 0;
+
+	// Visible focus ring for keyboard users.
+	&:focus-visible {
+		outline: var(--wp-admin-border-width-focus) solid var(--wp-admin-theme-color, #007cba);
+		outline-offset: -#{$border-width};
+	}
+
+	// Ensure the icon inherits the text colour of the bar.
+	svg {
+		fill: currentColor;
+	}
+}
+
 .block-editor-panel-color-gradient-settings__color-indicator {
 	// Show a diagonal line (crossed out) for empty swatches.
 	background: linear-gradient(-45deg, transparent 48%, $gray-300 48%, $gray-300 52%, transparent 52%);

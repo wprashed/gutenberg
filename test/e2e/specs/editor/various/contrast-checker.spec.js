@@ -3,7 +3,7 @@
  */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
-const WARNING_TEXT = 'This color combination may be hard for people to read';
+const WARNING_LABEL = 'This color combination may be hard for people to read.';
 
 test.describe( 'Contrast Checker', () => {
 	test.beforeEach( async ( { admin } ) => {
@@ -45,8 +45,9 @@ test.describe( 'Contrast Checker', () => {
 			exact: true,
 		} );
 
+		// The warning indicator lives inside the open color popover.
 		const lowContrastWarning = page.locator(
-			'.block-editor-contrast-checker'
+			'.block-editor-color-contrast-warning'
 		);
 
 		// Set text color to black.
@@ -60,9 +61,12 @@ test.describe( 'Contrast Checker', () => {
 		await backgroundButton.click();
 		await page.getByRole( 'option', { name: 'Black' } ).click();
 
-		// Warning should appear inside the open background color popover.
+		// Warning overlay should appear inside the open background color popover.
 		await expect( lowContrastWarning ).toBeVisible();
-		await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
+		await expect( lowContrastWarning ).toHaveAttribute(
+			'aria-label',
+			WARNING_LABEL
+		);
 
 		// Close the background color popover.
 		await backgroundButton.click();
@@ -72,7 +76,6 @@ test.describe( 'Contrast Checker', () => {
 		// Reopen the text color popover — warning should also appear there.
 		await textButton.click();
 		await expect( lowContrastWarning ).toBeVisible();
-		await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
 		await textButton.click();
 	} );
 
@@ -83,7 +86,7 @@ test.describe( 'Contrast Checker', () => {
 		await editor.openDocumentSettingsSidebar();
 
 		const lowContrastWarning = page.locator(
-			'.block-editor-contrast-checker'
+			'.block-editor-color-contrast-warning'
 		);
 
 		await editor.insertBlock( {
@@ -139,7 +142,7 @@ test.describe( 'Contrast Checker', () => {
 		await editor.openDocumentSettingsSidebar();
 
 		const lowContrastWarning = page.locator(
-			'.block-editor-contrast-checker'
+			'.block-editor-color-contrast-warning'
 		);
 
 		await editor.insertBlock( {
@@ -180,13 +183,13 @@ test.describe( 'Contrast Checker', () => {
 		await backgroundButton.click();
 		await page.getByRole( 'option', { name: 'Black' } ).click();
 
-		// Verify warning appears in the open background popover.
+		// Verify warning overlay appears in the open background popover.
 		await expect( lowContrastWarning ).toBeVisible();
 
-		// Fix contrast: change background to white (while popover is still open).
+		// Fix contrast: change background to white while popover is still open.
 		await page.getByRole( 'option', { name: 'White' } ).click();
 
-		// Verify warning disappears once contrast is fixed.
+		// Verify warning disappears once contrast is sufficient.
 		await expect( lowContrastWarning ).toBeHidden();
 
 		await backgroundButton.click();
@@ -199,7 +202,7 @@ test.describe( 'Contrast Checker', () => {
 		await editor.openDocumentSettingsSidebar();
 
 		const lowContrastWarning = page.locator(
-			'.block-editor-contrast-checker'
+			'.block-editor-color-contrast-warning'
 		);
 
 		// Insert a button block.
@@ -238,9 +241,12 @@ test.describe( 'Contrast Checker', () => {
 		await backgroundButton.click();
 		await page.getByRole( 'option', { name: 'Black' } ).click();
 
-		// Verify warning appears in the open background popover.
+		// Verify warning overlay appears in the open background popover.
 		await expect( lowContrastWarning ).toBeVisible();
-		await expect( lowContrastWarning ).toContainText( WARNING_TEXT );
+		await expect( lowContrastWarning ).toHaveAttribute(
+			'aria-label',
+			WARNING_LABEL
+		);
 
 		await backgroundButton.click();
 	} );
@@ -252,7 +258,7 @@ test.describe( 'Contrast Checker', () => {
 		await editor.openDocumentSettingsSidebar();
 
 		const lowContrastWarning = page.locator(
-			'.block-editor-contrast-checker'
+			'.block-editor-color-contrast-warning'
 		);
 
 		// Insert a button block.
