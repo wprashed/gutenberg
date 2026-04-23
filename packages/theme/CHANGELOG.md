@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Enhancements
+
+-   Increase the contrast target of `stroke1` from `2.6` to `2.9` so that, on the default scale, it lands between `gray100` and `gray200`. This regenerates `stroke1` for every ramp and updates the values of `--wpds-color-stroke-surface-{brand,error,info,success,warning,neutral-weak}` and `--wpds-color-bg-track-neutral-weak`.
+
 ## 0.11.0 (2026-04-15)
 
 ### Breaking changes
