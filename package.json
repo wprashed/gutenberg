@@ -150,7 +150,7 @@
 		"lint:md:docs": "wp-scripts lint-md-docs",
 		"prelint:php": "npm run other:update-packages:php",
 		"lint:php": "wp-env run --env-cwd='wp-content/plugins/gutenberg' cli composer run-script lint",
-		"lint:pkg-json": "wp-scripts lint-pkg-json . 'packages/*/package.json'",
+		"lint:pkg-json": "wp-scripts lint-pkg-json . 'packages/*/package.json' 'tools/*/package.json'",
 		"native": "npm run --prefix packages/react-native-editor",
 		"other:changelog": "node ./bin/plugin/cli.js changelog",
 		"other:check-licenses": "concurrently \"node ./bin/check-licenses.mjs\" \"wp-scripts check-licenses --dev\"",
