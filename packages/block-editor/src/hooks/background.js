@@ -305,9 +305,14 @@ export function BackgroundImagePanel( {
  * @param {Object} props Passthrough props for `StylesBackgroundPanel`.
  */
 function BackgroundPanelWithInheritedValue( props ) {
-	const inheritedValue = useInheritedValue();
+	const { value: inheritedValue, sources: inheritedSources } =
+		useInheritedValue();
 	return (
-		<StylesBackgroundPanel { ...props } inheritedValue={ inheritedValue } />
+		<StylesBackgroundPanel
+			{ ...props }
+			inheritedValue={ inheritedValue }
+			inheritedSources={ inheritedSources }
+		/>
 	);
 }
 

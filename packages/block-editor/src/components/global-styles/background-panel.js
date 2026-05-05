@@ -18,7 +18,11 @@ import { ColorPanelDropdown } from './color-panel';
 import { useGradientsPerOrigin } from './hooks';
 import { useToolsPanelDropdownMenuProps } from './utils';
 import { setImmutably } from '../../utils/object';
-import { getInheritanceProps, InheritanceToolsPanelItem } from './inheritance';
+import {
+	getInheritanceProps,
+	getInheritanceTooltipTextByPath,
+	InheritanceToolsPanelItem,
+} from './inheritance';
 
 const DEFAULT_CONTROLS = {
 	backgroundImage: true,
@@ -131,6 +135,7 @@ export default function BackgroundImagePanel( {
 	value,
 	onChange,
 	inheritedValue,
+	inheritedSources = {},
 	settings,
 	panelId,
 	defaultControls = DEFAULT_CONTROLS,
@@ -234,6 +239,8 @@ export default function BackgroundImagePanel( {
 		showInheritanceLabelIndicators
 			? getInheritanceProps( isInherited, hasLocalOverride, className )
 			: {};
+	const tooltipText = ( path ) =>
+		getInheritanceTooltipTextByPath( inheritedSources, path );
 
 	return (
 		<Wrapper
@@ -257,6 +264,9 @@ export default function BackgroundImagePanel( {
 					) }
 					hasValue={ () => hasBackgroundImageValue( value ) }
 					label={ __( 'Image' ) }
+					inheritanceTooltipText={ tooltipText(
+						'background.backgroundImage'
+					) }
 					onDeselect={ resetBackground }
 					isShownByDefault={ defaultControls.backgroundImage }
 					panelId={ panelId }
@@ -283,6 +293,7 @@ export default function BackgroundImagePanel( {
 					}
 					hasInheritedValue={ inheritedGradient !== undefined }
 					label={ __( 'Gradient' ) }
+					inheritedSources={ inheritedSources }
 					hasValue={ () => hasBackgroundGradientValue( value ) }
 					resetValue={ resetGradient }
 					isShownByDefault={ defaultControls.gradient }
@@ -299,6 +310,10 @@ export default function BackgroundImagePanel( {
 						{
 							key: 'gradient',
 							label: __( 'Gradient' ),
+							sourcePaths: [
+								'background.gradient',
+								'color.gradient',
+							],
 							inheritedValue: inheritedGradient,
 							setValue: setGradient,
 							userValue: currentGradient,

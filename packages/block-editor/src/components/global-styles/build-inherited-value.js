@@ -12,6 +12,135 @@ import { getVariationStylesWithRefValues } from '../../hooks/block-style-variati
 const TREE_STRUCTURAL_KEYS = new Set( [ 'blocks', 'variations', 'css' ] );
 
 /**
+ * Empty inheritance data returned before Global Styles payloads settle.
+ */
+const EMPTY_INHERITANCE = Object.freeze( { value: {}, sources: {} } );
+
+/**
+ * Source breadcrumb part identifiers for each Global Styles inheritance layer.
+ */
+const SOURCE_BREADCRUMB_PARTS = {
+	globalStyles: 'globalStyles',
+	elements: 'elements',
+	block: 'block',
+	variation: 'variation',
+};
+
+/**
+ * Breadcrumb source descriptors for each Global Styles inheritance layer.
+ */
+const SOURCE_DESCRIPTORS = {
+	root: {
+		breadcrumb: [ SOURCE_BREADCRUMB_PARTS.globalStyles ],
+		layer: 'root',
+	},
+	rootElement: {
+		breadcrumb: [
+			SOURCE_BREADCRUMB_PARTS.globalStyles,
+			SOURCE_BREADCRUMB_PARTS.elements,
+		],
+		layer: 'rootElement',
+	},
+	block: {
+		breadcrumb: [
+			SOURCE_BREADCRUMB_PARTS.globalStyles,
+			SOURCE_BREADCRUMB_PARTS.block,
+		],
+		layer: 'block',
+	},
+	blockElement: {
+		breadcrumb: [
+			SOURCE_BREADCRUMB_PARTS.globalStyles,
+			SOURCE_BREADCRUMB_PARTS.block,
+			SOURCE_BREADCRUMB_PARTS.elements,
+		],
+		layer: 'blockElement',
+	},
+	blockVariation: {
+		breadcrumb: [
+			SOURCE_BREADCRUMB_PARTS.globalStyles,
+			SOURCE_BREADCRUMB_PARTS.block,
+			SOURCE_BREADCRUMB_PARTS.variation,
+		],
+		layer: 'blockVariation',
+	},
+	blockVariationElement: {
+		breadcrumb: [
+			SOURCE_BREADCRUMB_PARTS.globalStyles,
+			SOURCE_BREADCRUMB_PARTS.block,
+			SOURCE_BREADCRUMB_PARTS.variation,
+			SOURCE_BREADCRUMB_PARTS.elements,
+		],
+		layer: 'blockVariationElement',
+	},
+};
+
+function createSourceDescriptor(
+	type,
+	{ blockName, variation, element } = {}
+) {
+	const descriptor = SOURCE_DESCRIPTORS[ type ];
+	if ( ! descriptor ) {
+		return null;
+	}
+	return {
+		...descriptor,
+		breadcrumb: element
+			? [ ...descriptor.breadcrumb, element ]
+			: [ ...descriptor.breadcrumb ],
+		blockName: blockName ?? null,
+		variation: variation ?? null,
+		element: element ?? null,
+	};
+}
+
+/**
+ * Create a merge contribution with the source metadata that applies to all
+ * leaves in its style object.
+ *
+ * @param {?Object} styles Style contribution for one inheritance layer.
+ * @param {?Object} source Source metadata for the contribution.
+ * @return {?Object} Merge contribution, or null when styles/source is empty.
+ */
+function createContribution( styles, source ) {
+	if ( ! styles || ! source ) {
+		return null;
+	}
+	return { styles, source };
+}
+
+/**
+ * Build a dot-path key for a style leaf.
+ *
+ * @param {Array} path Path segments.
+ * @return {string} Dot path.
+ */
+function getPathKey( path ) {
+	return path.join( '.' );
+}
+
+/**
+ * Clone source metadata before storing it so source map entries can safely
+ * diverge as paths differ.
+ *
+ * @param {Object} source Source descriptor.
+ * @param {Array}  path   Leaf path.
+ * @return {Object} Stored source descriptor.
+ */
+function getSourceForPath( source, path ) {
+	const breadcrumb = [ ...source.breadcrumb ];
+	const [ maybeElementsKey, maybeElement ] = path;
+	if ( maybeElementsKey === 'elements' && maybeElement ) {
+		breadcrumb.push( SOURCE_BREADCRUMB_PARTS.elements, maybeElement );
+	}
+	return {
+		...source,
+		breadcrumb,
+		path: [ ...path ],
+	};
+}
+
+/**
  * Explicit-empty values do not contribute at their layer, allowing
  * lower-precedence layers to surface instead.
  *
@@ -133,9 +262,19 @@ function pickLayerElementContribution( layer, element ) {
  * @param {Object} target
  * @param {Object} source
  * @param {Object} globalStyles
+ * @param {Object} sourceMetadata
+ * @param {Object} sources
+ * @param {Array}  path
  * @return {Object} The mutated `target`.
  */
-function deepMergeDroppingEmpties( target, source, globalStyles ) {
+function deepMergeDroppingEmpties(
+	target,
+	source,
+	globalStyles,
+	sourceMetadata,
+	sources,
+	path = []
+) {
 	if ( ! source || typeof source !== 'object' || Array.isArray( source ) ) {
 		return target;
 	}
@@ -154,6 +293,7 @@ function deepMergeDroppingEmpties( target, source, globalStyles ) {
 			}
 			sVal = resolved;
 		}
+		const nextPath = [ ...path, key ];
 		if (
 			sVal !== null &&
 			typeof sVal === 'object' &&
@@ -169,10 +309,19 @@ function deepMergeDroppingEmpties( target, source, globalStyles ) {
 			target[ key ] = deepMergeDroppingEmpties(
 				{ ...existing },
 				sVal,
-				globalStyles
+				globalStyles,
+				sourceMetadata,
+				sources,
+				nextPath
 			);
 		} else {
 			target[ key ] = sVal;
+			if ( sourceMetadata && sources ) {
+				sources[ getPathKey( nextPath ) ] = getSourceForPath(
+					sourceMetadata,
+					nextPath
+				);
+			}
 		}
 	}
 	return target;
@@ -196,17 +345,32 @@ function deepMergeDroppingEmpties( target, source, globalStyles ) {
  * @param {Object}  [args.globalStyles] The `settings[ globalStylesDataKey ]` payload.
  * @return {Object} Merged panel-scoped payload.
  */
-export function buildInheritedValue( {
+export function buildInheritedValue( args = {} ) {
+	return buildInheritedValueWithSources( args ).value;
+}
+
+/**
+ * Compute the merged Global Styles payload and a source map describing which
+ * Global Styles layer supplied each winning leaf.
+ *
+ * @param {Object}  args
+ * @param {string}  args.blockName      Block name (e.g. `core/heading`).
+ * @param {?string} [args.element]      Element tag to fold (e.g. `h2`, `link`), or null for block-scope only.
+ * @param {?string} [args.ownVariation] Active block style variation slug, or null.
+ * @param {Object}  [args.globalStyles] The `settings[ globalStylesDataKey ]` payload.
+ * @return {{ value: Object, sources: Object }} Merged panel-scoped payload and source map.
+ */
+export function buildInheritedValueWithSources( {
 	blockName,
 	element = null,
 	ownVariation = null,
 	globalStyles,
 } = {} ) {
 	if ( ! globalStyles || ! globalStyles.styles ) {
-		return {};
+		return EMPTY_INHERITANCE;
 	}
 	if ( ! blockName ) {
-		return {};
+		return EMPTY_INHERITANCE;
 	}
 
 	const { styles } = globalStyles;
@@ -226,27 +390,70 @@ export function buildInheritedValue( {
 	// element-scope contributions are merged separately so element
 	// overrides can replace specific leaves without dropping sibling values.
 	const contributions = [
-		pickLayerRootContribution( root ),
-		element ? pickLayerElementContribution( root, element ) : null,
-		block ? pickLayerRootContribution( block ) : null,
-		block && element
-			? pickLayerElementContribution( block, element )
+		createContribution(
+			pickLayerRootContribution( root ),
+			createSourceDescriptor( 'root' )
+		),
+		element
+			? createContribution(
+					pickLayerElementContribution( root, element ),
+					createSourceDescriptor( 'rootElement', { element } )
+			  )
 			: null,
-		variation ? pickLayerRootContribution( variation ) : null,
+		block
+			? createContribution(
+					pickLayerRootContribution( block ),
+					createSourceDescriptor( 'block', { blockName } )
+			  )
+			: null,
+		block && element
+			? createContribution(
+					pickLayerElementContribution( block, element ),
+					createSourceDescriptor( 'blockElement', {
+						blockName,
+						element,
+					} )
+			  )
+			: null,
+		variation
+			? createContribution(
+					pickLayerRootContribution( variation ),
+					createSourceDescriptor( 'blockVariation', {
+						blockName,
+						variation: ownVariation,
+					} )
+			  )
+			: null,
 		variation && element
-			? pickLayerElementContribution( variation, element )
+			? createContribution(
+					pickLayerElementContribution( variation, element ),
+					createSourceDescriptor( 'blockVariationElement', {
+						blockName,
+						variation: ownVariation,
+						element,
+					} )
+			  )
 			: null,
 	].filter( Boolean );
 
 	if ( contributions.length === 0 ) {
-		return {};
+		return EMPTY_INHERITANCE;
 	}
 
-	return contributions.reduce(
+	const sources = {};
+	const value = contributions.reduce(
 		( acc, contribution ) =>
-			deepMergeDroppingEmpties( acc, contribution, globalStyles ),
+			deepMergeDroppingEmpties(
+				acc,
+				contribution.styles,
+				globalStyles,
+				contribution.source,
+				sources
+			),
 		{}
 	);
+
+	return { value, sources };
 }
 
 /**
@@ -258,15 +465,25 @@ export function buildInheritedValue( {
 const memo = new WeakMap();
 
 /**
- * Memoized variant of `buildInheritedValue`. Same signature.
+ * Memoized variant of `buildInheritedValueWithSources`. Same signature.
  *
  * @param {Object} args
- * @return {Object} Merged panel-scoped payload; may be a cache hit.
+ * @return {{ value: Object, sources: Object }} Merged panel-scoped payload and source map; may be a cache hit.
  */
 export function buildInheritedValueMemoized( args ) {
+	return buildInheritedValueWithSourcesMemoized( args ).value;
+}
+
+/**
+ * Memoized variant of `buildInheritedValueWithSources`. Same signature.
+ *
+ * @param {Object} args
+ * @return {{ value: Object, sources: Object }} Merged panel-scoped payload and source map; may be a cache hit.
+ */
+export function buildInheritedValueWithSourcesMemoized( args ) {
 	const gs = args?.globalStyles;
 	if ( ! gs || typeof gs !== 'object' ) {
-		return buildInheritedValue( args );
+		return buildInheritedValueWithSources( args );
 	}
 	let inner = memo.get( gs );
 	if ( ! inner ) {
@@ -282,7 +499,7 @@ export function buildInheritedValueMemoized( args ) {
 	if ( inner.has( key ) ) {
 		return inner.get( key );
 	}
-	const result = buildInheritedValue( args );
+	const result = buildInheritedValueWithSources( args );
 	inner.set( key, result );
 	return result;
 }

@@ -216,9 +216,14 @@ function DuotonePanelPure( { style, setAttributes, name, clientId } ) {
  * @param {Object} props Passthrough props for `StylesFiltersPanel`.
  */
 function FiltersPanelWithInheritedValue( props ) {
-	const inheritedValue = useInheritedValue();
+	const { value: inheritedValue, sources: inheritedSources } =
+		useInheritedValue();
 	return (
-		<StylesFiltersPanel { ...props } inheritedValue={ inheritedValue } />
+		<StylesFiltersPanel
+			{ ...props }
+			inheritedValue={ inheritedValue }
+			inheritedSources={ inheritedSources }
+		/>
 	);
 }
 

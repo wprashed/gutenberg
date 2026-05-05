@@ -21,7 +21,77 @@ import {
 	useRef,
 	useState,
 } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
+
+const GENERIC_INHERITANCE_TOOLTIP_TEXT = __( 'Inherited from Global Styles' );
+
+const BREADCRUMB_LABELS = {
+	globalStyles: __( 'Global Styles' ),
+	elements: __( 'Elements' ),
+	block: __( 'Block' ),
+	variation: __( 'Variation' ),
+};
+
+function getTranslatedBreadcrumb( breadcrumb ) {
+	return breadcrumb
+		.map( ( part ) => BREADCRUMB_LABELS[ part ] ?? part )
+		.join( ' > ' );
+}
+
+/**
+ * Formats a source entry into user-facing tooltip text.
+ *
+ * @param {?Object} source Source metadata.
+ * @return {string|undefined} Tooltip text, or undefined when no source exists.
+ */
+export function getInheritanceTooltipText( source ) {
+	const breadcrumb = source?.breadcrumb;
+	if ( ! Array.isArray( breadcrumb ) || breadcrumb.length === 0 ) {
+		return undefined;
+	}
+	return sprintf(
+		// translators: %s: Global Styles source breadcrumb, for example "Global Styles > Block > Variation".
+		__( 'Inherited from %s' ),
+		getTranslatedBreadcrumb( breadcrumb )
+	);
+}
+
+/**
+ * Formats a source entry from a source map path.
+ *
+ * @param {?Object} sources Source metadata keyed by dot path.
+ * @param {string}  path    Dot path.
+ * @return {string|undefined} Tooltip text, or undefined when no source exists.
+ */
+export function getInheritanceTooltipTextByPath( sources, path ) {
+	return getInheritanceTooltipText( sources?.[ path ] );
+}
+
+/**
+ * Formats a tooltip for a compound control. A shared source is used only when
+ * all contributing paths resolve to the same breadcrumb; mixed sources receive
+ * a conservative summary.
+ *
+ * @param {?Object} sources Source metadata keyed by dot path.
+ * @param {Array}   paths   Dot paths to inspect.
+ * @return {string|undefined} Tooltip text, or undefined when no source exists.
+ */
+export function getCommonInheritanceTooltipText( sources, paths ) {
+	const sourceEntries = paths
+		.map( ( path ) => sources?.[ path ] )
+		.filter( Boolean );
+	if ( sourceEntries.length === 0 ) {
+		return undefined;
+	}
+	const firstBreadcrumb = sourceEntries[ 0 ].breadcrumb?.join( ' > ' );
+	const hasCommonBreadcrumb = sourceEntries.every(
+		( source ) => source.breadcrumb?.join( ' > ' ) === firstBreadcrumb
+	);
+	if ( hasCommonBreadcrumb ) {
+		return getInheritanceTooltipText( sourceEntries[ 0 ] );
+	}
+	return __( 'Inherited from multiple Global Styles sources' );
+}
 
 /**
  * Returns props to spread onto a wrapping `<InheritanceToolsPanelItem>`
@@ -152,14 +222,20 @@ function InheritanceDot( { onResetToInherited } ) {
  * re-render when stable).
  *
  * @param {Object}   props
- * @param {Function} props.onResetToInherited Reset handler forwarded to the
- *                                            dot menu.
- * @param {boolean}  props.isInherited        Whether to attach the inherited
- *                                            tooltip to the label.
+ * @param {Function} props.onResetToInherited     Reset handler forwarded to the
+ *                                                dot menu.
+ * @param {boolean}  props.isInherited            Whether to attach the inherited
+ *                                                tooltip to the label.
+ * @param {string}   props.inheritanceTooltipText Tooltip text for inherited
+ *                                                controls.
  *
  * @return {Element} The sentinel span plus portaled inheritance UI.
  */
-function PortaledInheritanceControls( { onResetToInherited, isInherited } ) {
+function PortaledInheritanceControls( {
+	onResetToInherited,
+	isInherited,
+	inheritanceTooltipText,
+} ) {
 	const sentinelRef = useRef( null );
 	const [ labelEl, setLabelEl ] = useState( null );
 
@@ -205,7 +281,10 @@ function PortaledInheritanceControls( { onResetToInherited, isInherited } ) {
 					<>
 						{ isInherited && (
 							<Tooltip
-								text={ __( 'Inherited from Global Styles' ) }
+								text={
+									inheritanceTooltipText ??
+									GENERIC_INHERITANCE_TOOLTIP_TEXT
+								}
 							>
 								<span className="global-styles-inheritance-tooltip-anchor">
 									<span className="global-styles-inheritance-tooltip-anchor__text">
@@ -243,12 +322,14 @@ function PortaledInheritanceControls( { onResetToInherited, isInherited } ) {
  * `setAttributes` undo step.
  *
  * @param {Object}   props
- * @param {string}   [props.className]        ClassName forwarded to ToolsPanelItem.
- * @param {boolean}  [props.isInherited]      Whether the control inherits at rest.
- * @param {boolean}  [props.hasLocalOverride] Whether the control overrides an inherited value.
- * @param {string}   props.label              Visible label.
- * @param {Function} props.onDeselect         Reset handler.
- * @param {Element}  props.children           Inner control.
+ * @param {string}   [props.className]            ClassName forwarded to ToolsPanelItem.
+ * @param {boolean}  [props.isInherited]          Whether the control inherits at rest.
+ * @param {boolean}  [props.hasLocalOverride]     Whether the control overrides an inherited value.
+ * @param {string}   props.label                  Visible label.
+ * @param {Function} props.onDeselect             Reset handler.
+ * @param {string}   props.inheritanceTooltipText Tooltip text for inherited
+ *                                                controls.
+ * @param {Element}  props.children               Inner control.
  *
  * @return {Element} The wrapped ToolsPanelItem.
  */
@@ -258,6 +339,7 @@ export function InheritanceToolsPanelItem( {
 	hasLocalOverride,
 	label,
 	onDeselect,
+	inheritanceTooltipText,
 	children,
 	...rest
 } ) {
@@ -271,6 +353,7 @@ export function InheritanceToolsPanelItem( {
 			{ children }
 			{ ( isInherited || hasLocalOverride ) && (
 				<PortaledInheritanceControls
+					inheritanceTooltipText={ inheritanceTooltipText }
 					isInherited={ isInherited }
 					onResetToInherited={
 						hasLocalOverride ? onDeselect : undefined

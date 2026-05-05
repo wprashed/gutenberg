@@ -217,8 +217,15 @@ export function BorderPanel( { clientId, name, setAttributes, settings } ) {
  * @param {Object} props Passthrough props for `StylesBorderPanel`.
  */
 function BorderPanelWithInheritedValue( props ) {
-	const inheritedValue = useInheritedValue();
-	return <StylesBorderPanel { ...props } inheritedValue={ inheritedValue } />;
+	const { value: inheritedValue, sources: inheritedSources } =
+		useInheritedValue();
+	return (
+		<StylesBorderPanel
+			{ ...props }
+			inheritedValue={ inheritedValue }
+			inheritedSources={ inheritedSources }
+		/>
+	);
 }
 
 /**

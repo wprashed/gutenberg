@@ -8,8 +8,8 @@ import clsx from 'clsx';
  */
 import {
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalHStack as HStack,
-	__experimentalZStack as ZStack,
+	__experimentalHStack as HStack, // eslint-disable-line @wordpress/use-recommended-components
+	__experimentalZStack as ZStack, // eslint-disable-line @wordpress/use-recommended-components
 	__experimentalDropdownContentWrapper as DropdownContentWrapper,
 	ColorIndicator,
 	Flex,
@@ -31,7 +31,11 @@ import { useColorsPerOrigin, useGradientsPerOrigin } from './hooks';
 import { useToolsPanelDropdownMenuProps } from './utils';
 import { setImmutably } from '../../utils/object';
 import { unlock } from '../../lock-unlock';
-import { getInheritanceProps, InheritanceToolsPanelItem } from './inheritance';
+import {
+	getCommonInheritanceTooltipText,
+	getInheritanceProps,
+	InheritanceToolsPanelItem,
+} from './inheritance';
 
 export function useHasColorPanel( settings ) {
 	const hasTextPanel = useHasTextPanel( settings );
@@ -232,6 +236,7 @@ export function ColorPanelDropdown( {
 	isPlaceholder = false,
 	hasInheritedValue = false,
 	showInheritanceLabelIndicators = true,
+	inheritedSources = {},
 } ) {
 	const currentTab =
 		tabs.find( ( tab ) => tab.userValue !== undefined ) ??
@@ -244,6 +249,11 @@ export function ColorPanelDropdown( {
 		showInheritanceLabelIndicators
 			? getInheritanceProps( isInherited, hasLocalOverride, classes )
 			: { className: classes };
+	const tabSourcePaths = tabs.flatMap( ( tab ) => tab.sourcePaths ?? [] );
+	const inheritanceTooltipText = getCommonInheritanceTooltipText(
+		inheritedSources,
+		tabSourcePaths
+	);
 	return (
 		<InheritanceToolsPanelItem
 			{ ...inheritanceProps(
@@ -253,6 +263,7 @@ export function ColorPanelDropdown( {
 			) }
 			hasValue={ hasValue }
 			label={ label }
+			inheritanceTooltipText={ inheritanceTooltipText }
 			onDeselect={ resetValue }
 			isShownByDefault={ isShownByDefault }
 			panelId={ panelId }
@@ -358,6 +369,7 @@ export default function ColorPanel( {
 	value,
 	onChange,
 	inheritedValue = value,
+	inheritedSources = {},
 	settings,
 	panelId,
 	defaultControls = DEFAULT_CONTROLS,
@@ -401,7 +413,6 @@ export default function ColorPanel( {
 			? 'var:preset|gradient|' + gradientObject.slug
 			: gradientValue;
 	};
-
 	// BackgroundColor
 	const showBackgroundPanel = useHasBackgroundColorPanel( settings );
 	const backgroundColor = decodeValue( inheritedValue?.color?.background );
@@ -599,6 +610,7 @@ export default function ColorPanel( {
 		showTextPanel && {
 			key: 'text',
 			label: __( 'Text' ),
+			sourcePaths: [ 'color.text' ],
 			hasValue: hasTextColor,
 			resetValue: resetTextColor,
 			isShownByDefault: defaultControls.text,
@@ -610,6 +622,7 @@ export default function ColorPanel( {
 				{
 					key: 'text',
 					label: __( 'Text' ),
+					sourcePaths: [ 'color.text' ],
 					inheritedValue: textColor,
 					setValue: setTextColor,
 					userValue: userTextColor,
@@ -621,6 +634,7 @@ export default function ColorPanel( {
 		showBackgroundPanel && {
 			key: 'background',
 			label: __( 'Background' ),
+			sourcePaths: [ 'color.background', 'color.gradient' ],
 			hasValue: hasBackground,
 			resetValue: resetBackground,
 			isShownByDefault: defaultControls.background,
@@ -642,6 +656,7 @@ export default function ColorPanel( {
 				hasSolidColors && {
 					key: 'background',
 					label: __( 'Color' ),
+					sourcePaths: [ 'color.background' ],
 					inheritedValue: backgroundColor,
 					setValue: setBackgroundColor,
 					userValue: userBackgroundColor,
@@ -652,6 +667,7 @@ export default function ColorPanel( {
 				showGradientColors && {
 					key: 'gradient',
 					label: __( 'Gradient' ),
+					sourcePaths: [ 'color.gradient' ],
 					inheritedValue: gradient,
 					setValue: setGradient,
 					userValue: userGradient,
@@ -664,6 +680,10 @@ export default function ColorPanel( {
 		showLinkPanel && {
 			key: 'link',
 			label: __( 'Link' ),
+			sourcePaths: [
+				'elements.link.color.text',
+				'elements.link.:hover.color.text',
+			],
 			hasValue: hasLink,
 			resetValue: resetLink,
 			isShownByDefault: defaultControls.link,
@@ -681,6 +701,7 @@ export default function ColorPanel( {
 				{
 					key: 'link',
 					label: __( 'Default' ),
+					sourcePaths: [ 'elements.link.color.text' ],
 					inheritedValue: linkColor,
 					setValue: setLinkColor,
 					userValue: userLinkColor,
@@ -690,6 +711,7 @@ export default function ColorPanel( {
 				{
 					key: 'hover',
 					label: __( 'Hover' ),
+					sourcePaths: [ 'elements.link.:hover.color.text' ],
 					inheritedValue: hoverLinkColor,
 					setValue: setHoverLinkColor,
 					userValue: userHoverLinkColor,
@@ -799,6 +821,11 @@ export default function ColorPanel( {
 		items.push( {
 			key: name,
 			label: elementLabel,
+			sourcePaths: [
+				`elements.${ name }.color.text`,
+				`elements.${ name }.color.background`,
+				`elements.${ name }.color.gradient`,
+			],
 			hasValue: hasElement,
 			resetValue: resetElement,
 			isShownByDefault: defaultControls[ name ],
@@ -826,6 +853,7 @@ export default function ColorPanel( {
 					supportsTextColor && {
 						key: 'text',
 						label: __( 'Text' ),
+						sourcePaths: [ `elements.${ name }.color.text` ],
 						inheritedValue: elementTextColor,
 						setValue: setElementTextColor,
 						userValue: elementTextUserColor,
@@ -835,6 +863,7 @@ export default function ColorPanel( {
 					supportsBackground && {
 						key: 'background',
 						label: __( 'Background' ),
+						sourcePaths: [ `elements.${ name }.color.background` ],
 						inheritedValue: elementBackgroundColor,
 						setValue: setElementBackgroundColor,
 						userValue: elementBackgroundUserColor,
@@ -844,6 +873,7 @@ export default function ColorPanel( {
 					supportsBackground && {
 						key: 'gradient',
 						label: __( 'Gradient' ),
+						sourcePaths: [ `elements.${ name }.color.gradient` ],
 						inheritedValue: elementGradient,
 						setValue: setElementGradient,
 						userValue: elementGradientUserColor,
@@ -871,6 +901,7 @@ export default function ColorPanel( {
 						showInheritanceLabelIndicators={
 							showInheritanceLabelIndicators
 						}
+						inheritedSources={ inheritedSources }
 						colorGradientControlSettings={ {
 							colors,
 							disableCustomColors: ! areCustomSolidsEnabled,

@@ -385,9 +385,14 @@ export function ColorEdit( {
  * @param {*}      props.children Child color-control nodes.
  */
 function ColorPanelWithInheritedValue( { children, ...rest } ) {
-	const inheritedValue = useInheritedValue();
+	const { value: inheritedValue, sources: inheritedSources } =
+		useInheritedValue();
 	return (
-		<StylesColorPanel { ...rest } inheritedValue={ inheritedValue }>
+		<StylesColorPanel
+			{ ...rest }
+			inheritedValue={ inheritedValue }
+			inheritedSources={ inheritedSources }
+		>
 			{ children }
 		</StylesColorPanel>
 	);

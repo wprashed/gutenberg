@@ -14,14 +14,20 @@ import { useSelect } from '@wordpress/data';
 import {
 	buildInheritedValue,
 	buildInheritedValueMemoized,
+	buildInheritedValueWithSources,
+	buildInheritedValueWithSourcesMemoized,
 	__unstable,
 } from '../build-inherited-value';
+import {
+	getCommonInheritanceTooltipText,
+	getInheritanceTooltipText,
+} from '../inheritance';
 import {
 	InheritedValueProvider,
 	useInheritedValue,
 } from '../inherited-value-context';
-import { globalStylesDataKey } from '../../../store/private-keys';
 
+import { globalStylesDataKey } from '../../../store/private-keys';
 const {
 	isExplicitEmpty,
 	isRefObject,
@@ -34,6 +40,7 @@ jest.mock( '@wordpress/data', () => ( {
 	useSelect: jest.fn(),
 	useDispatch: jest.fn( () => ( {} ) ),
 	useRegistry: jest.fn( () => ( {} ) ),
+	createSelector: jest.fn( ( callback ) => callback ),
 	createReduxStore: jest.fn(),
 	createRegistry: jest.fn(),
 	register: jest.fn(),
@@ -380,10 +387,154 @@ describe( 'buildInheritedValue – pure builder', () => {
 			expect( out.elements.link.color.text ).toBe( '#0073aa' );
 		} );
 	} );
+
+	describe( 'tooltip formatting', () => {
+		test( 'formats a source breadcrumb', () => {
+			expect(
+				getInheritanceTooltipText( {
+					breadcrumb: [ 'globalStyles', 'block', 'variation' ],
+				} )
+			).toBe( 'Inherited from Global Styles > Block > Variation' );
+		} );
+
+		test( 'uses common source for compound controls when breadcrumbs match', () => {
+			expect(
+				getCommonInheritanceTooltipText(
+					{
+						'border.color': {
+							breadcrumb: [ 'globalStyles', 'block' ],
+						},
+						'border.width': {
+							breadcrumb: [ 'globalStyles', 'block' ],
+						},
+					},
+					[ 'border.color', 'border.width' ]
+				)
+			).toBe( 'Inherited from Global Styles > Block' );
+		} );
+
+		test( 'uses conservative text for mixed-source compound controls', () => {
+			expect(
+				getCommonInheritanceTooltipText(
+					{
+						'border.color': {
+							breadcrumb: [ 'globalStyles' ],
+						},
+						'border.width': {
+							breadcrumb: [ 'globalStyles', 'block' ],
+						},
+					},
+					[ 'border.color', 'border.width' ]
+				)
+			).toBe( 'Inherited from multiple Global Styles sources' );
+		} );
+	} );
+
+	describe( 'source provenance', () => {
+		const gs = {
+			styles: {
+				typography: { fontSize: '16px', lineHeight: '1.5' },
+				color: { text: '#111111' },
+				elements: {
+					link: { color: { text: '#0073aa' } },
+					h2: { typography: { fontSize: '24px' } },
+				},
+				blocks: {
+					'core/heading': {
+						typography: { fontSize: '28px' },
+						elements: {
+							h2: { typography: { fontSize: '32px' } },
+						},
+						variations: {
+							plain: {
+								typography: { fontSize: '20px' },
+								elements: {
+									h2: {
+										typography: { fontSize: '18px' },
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		};
+
+		test( 'returns value and source map from the same merge', () => {
+			const { value, sources } = buildInheritedValueWithSources( {
+				blockName: 'core/heading',
+				ownVariation: 'plain',
+				globalStyles: gs,
+			} );
+			expect( value.typography.fontSize ).toBe( '20px' );
+			expect( value.typography.lineHeight ).toBe( '1.5' );
+			expect( sources[ 'typography.fontSize' ] ).toMatchObject( {
+				breadcrumb: [ 'globalStyles', 'block', 'variation' ],
+				layer: 'blockVariation',
+				blockName: 'core/heading',
+				variation: 'plain',
+				path: [ 'typography', 'fontSize' ],
+			} );
+			expect( sources[ 'typography.lineHeight' ] ).toMatchObject( {
+				breadcrumb: [ 'globalStyles' ],
+				layer: 'root',
+			} );
+		} );
+
+		test( 'records element-folded winning source breadcrumbs', () => {
+			const { value, sources } = buildInheritedValueWithSources( {
+				blockName: 'core/heading',
+				element: 'h2',
+				ownVariation: 'plain',
+				globalStyles: gs,
+			} );
+			expect( value.typography.fontSize ).toBe( '18px' );
+			expect( sources[ 'typography.fontSize' ] ).toMatchObject( {
+				breadcrumb: [
+					'globalStyles',
+					'block',
+					'variation',
+					'elements',
+					'h2',
+				],
+				layer: 'blockVariationElement',
+				element: 'h2',
+			} );
+		} );
+
+		test( 'records preserved element sub-tree source paths', () => {
+			const { sources } = buildInheritedValueWithSources( {
+				blockName: 'core/paragraph',
+				globalStyles: gs,
+			} );
+			expect( sources[ 'elements.link.color.text' ] ).toMatchObject( {
+				breadcrumb: [ 'globalStyles', 'elements', 'link' ],
+				layer: 'root',
+				path: [ 'elements', 'link', 'color', 'text' ],
+			} );
+		} );
+	} );
 } );
 
 describe( 'buildInheritedValueMemoized – cache behaviour', () => {
-	test( 'returns the same object identity for identical keys', () => {
+	test( 'returns the same inheritance object identity for identical keys', () => {
+		const gs = { styles: { typography: { fontSize: '16px' } } };
+		const a = buildInheritedValueWithSourcesMemoized( {
+			blockName: 'core/paragraph',
+			globalStyles: gs,
+		} );
+		const b = buildInheritedValueWithSourcesMemoized( {
+			blockName: 'core/paragraph',
+			globalStyles: gs,
+		} );
+		expect( a ).toBe( b );
+		expect( a.value.typography.fontSize ).toBe( '16px' );
+		expect( a.sources[ 'typography.fontSize' ].breadcrumb ).toEqual( [
+			'globalStyles',
+		] );
+	} );
+
+	test( 'value-only memoized helper preserves the previous return shape', () => {
 		const gs = { styles: { typography: { fontSize: '16px' } } };
 		const a = buildInheritedValueMemoized( {
 			blockName: 'core/paragraph',
@@ -394,6 +545,7 @@ describe( 'buildInheritedValueMemoized – cache behaviour', () => {
 			globalStyles: gs,
 		} );
 		expect( a ).toBe( b );
+		expect( a.typography.fontSize ).toBe( '16px' );
 	} );
 
 	test( 'different composite key → different result', () => {
@@ -452,10 +604,12 @@ describe( 'useInheritedValue / InheritedValueProvider', () => {
 		return <div data-testid="probe">{ JSON.stringify( v ) }</div>;
 	}
 
-	test( 'without Provider, hook returns {}', () => {
+	test( 'without Provider, hook returns empty value and sources', () => {
 		useSelect.mockReturnValue( null );
 		render( <Probe /> );
-		expect( screen.getByTestId( 'probe' ) ).toHaveTextContent( '{}' );
+		expect( screen.getByTestId( 'probe' ) ).toHaveTextContent(
+			'{"value":{},"sources":{}}'
+		);
 	} );
 
 	test( 'Provider issues exactly one useSelect subscription per mount', () => {
@@ -505,10 +659,15 @@ describe( 'useInheritedValue / InheritedValueProvider', () => {
 			</InheritedValueProvider>
 		);
 		const parsed = JSON.parse( screen.getByTestId( 'probe' ).textContent );
-		expect( parsed.typography.fontSize ).toBe( '24px' );
+		expect( parsed.value.typography.fontSize ).toBe( '24px' );
+		expect( parsed.sources[ 'typography.fontSize' ].breadcrumb ).toEqual( [
+			'globalStyles',
+			'elements',
+			'h2',
+		] );
 	} );
 
-	test( 'hook returns {} during hydration (globalStyles not yet present)', () => {
+	test( 'hook returns { value, sources } during hydration', () => {
 		useSelect.mockImplementation( ( mapSelect ) =>
 			mapSelect( () => ( {
 				getSettings: () => ( {} ),
@@ -519,7 +678,9 @@ describe( 'useInheritedValue / InheritedValueProvider', () => {
 				<Probe />
 			</InheritedValueProvider>
 		);
-		expect( screen.getByTestId( 'probe' ) ).toHaveTextContent( '{}' );
+		expect( screen.getByTestId( 'probe' ) ).toHaveTextContent(
+			'{"value":{},"sources":{}}'
+		);
 	} );
 } );
 
@@ -553,8 +714,10 @@ describe( 'Provider integration: production bare-tree shape', () => {
 	} );
 
 	function Probe( { element } ) {
-		const v = useInheritedValue( element ? { element } : undefined );
-		return <div data-testid="probe">{ JSON.stringify( v ) }</div>;
+		const { value } = useInheritedValue(
+			element ? { element } : undefined
+		);
+		return <div data-testid="probe">{ JSON.stringify( value ) }</div>;
 	}
 
 	/**

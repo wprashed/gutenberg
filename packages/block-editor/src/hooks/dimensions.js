@@ -166,9 +166,14 @@ export function DimensionsPanel( { clientId, name, setAttributes, settings } ) {
  * @param {Object} props Passthrough props for `StylesDimensionsPanel`.
  */
 function DimensionsPanelWithInheritedValue( props ) {
-	const inheritedValue = useInheritedValue();
+	const { value: inheritedValue, sources: inheritedSources } =
+		useInheritedValue();
 	return (
-		<StylesDimensionsPanel { ...props } inheritedValue={ inheritedValue } />
+		<StylesDimensionsPanel
+			{ ...props }
+			inheritedValue={ inheritedValue }
+			inheritedSources={ inheritedSources }
+		/>
 	);
 }
 

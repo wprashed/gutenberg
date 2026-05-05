@@ -202,9 +202,14 @@ export function TypographyPanel( { clientId, name, setAttributes, settings } ) {
  * @param {Object} props Passthrough props for `StylesTypographyPanel`.
  */
 function TypographyPanelWithInheritedValue( props ) {
-	const inheritedValue = useInheritedValue();
+	const { value: inheritedValue, sources: inheritedSources } =
+		useInheritedValue();
 	return (
-		<StylesTypographyPanel { ...props } inheritedValue={ inheritedValue } />
+		<StylesTypographyPanel
+			{ ...props }
+			inheritedValue={ inheritedValue }
+			inheritedSources={ inheritedSources }
+		/>
 	);
 }
 

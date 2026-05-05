@@ -10,7 +10,7 @@ import { store as blocksStore } from '@wordpress/blocks';
  */
 import { store as blockEditorStore } from '../../store';
 import { globalStylesDataKey } from '../../store/private-keys';
-import { buildInheritedValueMemoized } from './build-inherited-value';
+import { buildInheritedValueWithSourcesMemoized } from './build-inherited-value';
 import { getVariationNameFromClass } from '../../hooks/block-style-variation';
 
 /**
@@ -67,28 +67,29 @@ export function InheritedValueProvider( {
 }
 
 /**
- * Hook: returns the merged `inheritedValue` payload for a panel. Call
- * once per panel, passing the element tag (if any) the panel folds.
+ * Hook: returns the merged `inheritedValue` payload and source map for a
+ * panel. Call once per panel, passing the element tag (if any) the panel
+ * folds.
  *
  * Before the Provider is mounted, or during hydration before the
- * `globalStylesDataKey` payload settles, the hook returns an empty object.
- * Each panel's existing `inheritedValue = value` default then keeps
- * pre-feature behavior.
+ * `globalStylesDataKey` payload settles, the hook returns empty value and
+ * source objects. Each panel's existing `inheritedValue = value` default
+ * then keeps pre-feature behavior after bridge components pass `.value`.
  *
  * The returned object identity is stable across renders when none of
  * `(globalStyles, blockName, element, ownVariation)` have changed.
  *
  * @param {Object}  [args]
  * @param {?string} [args.element] Element tag to fold (e.g. `h2`, `link`).
- * @return {Object} Merged panel-scoped payload, or `{}` before the Provider / Global Styles payload settles.
+ * @return {{ value: Object, sources: Object }} Merged panel-scoped payload and source map.
  */
 export function useInheritedValue( { element = null } = {} ) {
 	const ctx = useContext( InheritedValueContext );
 	return useMemo( () => {
 		if ( ! ctx || ! ctx.blockName ) {
-			return {};
+			return { value: {}, sources: {} };
 		}
-		return buildInheritedValueMemoized( {
+		return buildInheritedValueWithSourcesMemoized( {
 			blockName: ctx.blockName,
 			element,
 			ownVariation: ctx.ownVariation,

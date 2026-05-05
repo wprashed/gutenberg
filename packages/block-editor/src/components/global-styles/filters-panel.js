@@ -8,8 +8,8 @@ import clsx from 'clsx';
  */
 import {
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalHStack as HStack,
-	__experimentalZStack as ZStack,
+	__experimentalHStack as HStack, // eslint-disable-line @wordpress/use-recommended-components
+	__experimentalZStack as ZStack, // eslint-disable-line @wordpress/use-recommended-components
 	__experimentalDropdownContentWrapper as DropdownContentWrapper,
 	MenuGroup,
 	ColorIndicator,
@@ -30,7 +30,11 @@ import { getValueFromVariable } from '@wordpress/global-styles-engine';
  */
 import { useToolsPanelDropdownMenuProps } from './utils';
 import { setImmutably } from '../../utils/object';
-import { getInheritanceProps, InheritanceToolsPanelItem } from './inheritance';
+import {
+	getInheritanceProps,
+	getInheritanceTooltipTextByPath,
+	InheritanceToolsPanelItem,
+} from './inheritance';
 
 const EMPTY_ARRAY = [];
 function useMultiOriginColorPresets(
@@ -169,6 +173,7 @@ export default function FiltersPanel( {
 	value,
 	onChange,
 	inheritedValue = value,
+	inheritedSources = {},
 	settings,
 	panelId,
 	defaultControls = DEFAULT_CONTROLS,
@@ -180,6 +185,8 @@ export default function FiltersPanel( {
 		showInheritanceLabelIndicators
 			? getInheritanceProps( isInherited, hasLocalOverride, className )
 			: {};
+	const tooltipText = ( path ) =>
+		getInheritanceTooltipTextByPath( inheritedSources, path );
 
 	// Duotone
 	const hasDuotoneEnabled = useHasDuotoneControl( settings );
@@ -248,6 +255,7 @@ export default function FiltersPanel( {
 							inheritedDuotone !== undefined
 					) }
 					label={ __( 'Duotone' ) }
+					inheritanceTooltipText={ tooltipText( 'filter.duotone' ) }
 					hasValue={ hasDuotone }
 					onDeselect={ resetDuotone }
 					isShownByDefault={ defaultControls.duotone }
