@@ -72,6 +72,12 @@ jest.mock( '../../../store', () => ( {
 // `createSelector`), so stub the blocks module with just the shape needed.
 jest.mock( '@wordpress/blocks', () => ( {
 	store: { name: 'core/blocks' },
+	getBlockType: ( blockName ) =>
+		( {
+			'core/group': { title: 'Group' },
+			'core/heading': { title: 'Heading' },
+			'core/paragraph': { title: 'Paragraph' },
+		} )[ blockName ],
 } ) );
 
 // Short-circuit the variation-ref resolution path; ref handling is covered
@@ -392,9 +398,17 @@ describe( 'buildInheritedValue – pure builder', () => {
 		test( 'formats a source breadcrumb', () => {
 			expect(
 				getInheritanceTooltipText( {
-					breadcrumb: [ 'globalStyles', 'block', 'variation' ],
+					breadcrumb: [
+						'styles',
+						'blocks',
+						'blockName',
+						'variation',
+					],
+					blockName: 'core/group',
 				} )
-			).toBe( 'Inherited from Global Styles > Block > Variation' );
+			).toBe(
+				'Default inherited from:\nStyles > Blocks > Group > Variation'
+			);
 		} );
 
 		test( 'uses common source for compound controls when breadcrumbs match', () => {
@@ -402,15 +416,17 @@ describe( 'buildInheritedValue – pure builder', () => {
 				getCommonInheritanceTooltipText(
 					{
 						'border.color': {
-							breadcrumb: [ 'globalStyles', 'block' ],
+							breadcrumb: [ 'styles', 'blocks', 'blockName' ],
+							blockName: 'core/group',
 						},
 						'border.width': {
-							breadcrumb: [ 'globalStyles', 'block' ],
+							breadcrumb: [ 'styles', 'blocks', 'blockName' ],
+							blockName: 'core/group',
 						},
 					},
 					[ 'border.color', 'border.width' ]
 				)
-			).toBe( 'Inherited from Global Styles > Block' );
+			).toBe( 'Default inherited from:\nStyles > Blocks > Group' );
 		} );
 
 		test( 'uses conservative text for mixed-source compound controls', () => {
@@ -418,15 +434,16 @@ describe( 'buildInheritedValue – pure builder', () => {
 				getCommonInheritanceTooltipText(
 					{
 						'border.color': {
-							breadcrumb: [ 'globalStyles' ],
+							breadcrumb: [ 'styles' ],
 						},
 						'border.width': {
-							breadcrumb: [ 'globalStyles', 'block' ],
+							breadcrumb: [ 'styles', 'blocks', 'blockName' ],
+							blockName: 'core/group',
 						},
 					},
 					[ 'border.color', 'border.width' ]
 				)
-			).toBe( 'Inherited from multiple Global Styles sources' );
+			).toBe( 'Default inherited from multiple Styles sources' );
 		} );
 	} );
 
@@ -469,14 +486,14 @@ describe( 'buildInheritedValue – pure builder', () => {
 			expect( value.typography.fontSize ).toBe( '20px' );
 			expect( value.typography.lineHeight ).toBe( '1.5' );
 			expect( sources[ 'typography.fontSize' ] ).toMatchObject( {
-				breadcrumb: [ 'globalStyles', 'block', 'variation' ],
+				breadcrumb: [ 'styles', 'blocks', 'blockName', 'variation' ],
 				layer: 'blockVariation',
 				blockName: 'core/heading',
 				variation: 'plain',
 				path: [ 'typography', 'fontSize' ],
 			} );
 			expect( sources[ 'typography.lineHeight' ] ).toMatchObject( {
-				breadcrumb: [ 'globalStyles' ],
+				breadcrumb: [ 'styles' ],
 				layer: 'root',
 			} );
 		} );
@@ -491,8 +508,9 @@ describe( 'buildInheritedValue – pure builder', () => {
 			expect( value.typography.fontSize ).toBe( '18px' );
 			expect( sources[ 'typography.fontSize' ] ).toMatchObject( {
 				breadcrumb: [
-					'globalStyles',
-					'block',
+					'styles',
+					'blocks',
+					'blockName',
 					'variation',
 					'elements',
 					'h2',
@@ -508,7 +526,7 @@ describe( 'buildInheritedValue – pure builder', () => {
 				globalStyles: gs,
 			} );
 			expect( sources[ 'elements.link.color.text' ] ).toMatchObject( {
-				breadcrumb: [ 'globalStyles', 'elements', 'link' ],
+				breadcrumb: [ 'styles', 'elements', 'link' ],
 				layer: 'root',
 				path: [ 'elements', 'link', 'color', 'text' ],
 			} );
@@ -530,7 +548,7 @@ describe( 'buildInheritedValueMemoized – cache behaviour', () => {
 		expect( a ).toBe( b );
 		expect( a.value.typography.fontSize ).toBe( '16px' );
 		expect( a.sources[ 'typography.fontSize' ].breadcrumb ).toEqual( [
-			'globalStyles',
+			'styles',
 		] );
 	} );
 
@@ -661,7 +679,7 @@ describe( 'useInheritedValue / InheritedValueProvider', () => {
 		const parsed = JSON.parse( screen.getByTestId( 'probe' ).textContent );
 		expect( parsed.value.typography.fontSize ).toBe( '24px' );
 		expect( parsed.sources[ 'typography.fontSize' ].breadcrumb ).toEqual( [
-			'globalStyles',
+			'styles',
 			'elements',
 			'h2',
 		] );

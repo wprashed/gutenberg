@@ -21,21 +21,34 @@ import {
 	useRef,
 	useState,
 } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
+import { getBlockType } from '@wordpress/blocks';
+import { __ } from '@wordpress/i18n';
 
-const GENERIC_INHERITANCE_TOOLTIP_TEXT = __( 'Inherited from Global Styles' );
+const GENERIC_INHERITANCE_TOOLTIP_TEXT = __( 'Default inherited from:' );
+const INHERITANCE_TOOLTIP_LINE_SEPARATOR = '\n';
 
 const BREADCRUMB_LABELS = {
-	globalStyles: __( 'Global Styles' ),
+	styles: __( 'Styles' ),
 	elements: __( 'Elements' ),
-	block: __( 'Block' ),
+	blocks: __( 'Blocks' ),
 	variation: __( 'Variation' ),
 };
 
-function getTranslatedBreadcrumb( breadcrumb ) {
-	return breadcrumb
-		.map( ( part ) => BREADCRUMB_LABELS[ part ] ?? part )
-		.join( ' > ' );
+function getBlockTitle( blockName ) {
+	return getBlockType( blockName )?.title ?? blockName;
+}
+
+function getTranslatedBreadcrumb( source ) {
+	const breadcrumb = source?.breadcrumb;
+	const parts = breadcrumb
+		.map( ( part ) => {
+			if ( part === 'blockName' ) {
+				return getBlockTitle( source.blockName );
+			}
+			return BREADCRUMB_LABELS[ part ] ?? part;
+		} )
+		.filter( Boolean );
+	return parts.join( ' > ' );
 }
 
 /**
@@ -49,11 +62,23 @@ export function getInheritanceTooltipText( source ) {
 	if ( ! Array.isArray( breadcrumb ) || breadcrumb.length === 0 ) {
 		return undefined;
 	}
-	return sprintf(
-		// translators: %s: Global Styles source breadcrumb, for example "Global Styles > Block > Variation".
-		__( 'Inherited from %s' ),
-		getTranslatedBreadcrumb( breadcrumb )
-	);
+	return [
+		__( 'Default inherited from:' ),
+		getTranslatedBreadcrumb( source ),
+	].join( INHERITANCE_TOOLTIP_LINE_SEPARATOR );
+}
+
+function InheritanceTooltipContent( { text } ) {
+	return text
+		.split( INHERITANCE_TOOLTIP_LINE_SEPARATOR )
+		.map( ( line, index ) => (
+			<span
+				key={ `${ line }-${ index }` }
+				className="global-styles-inheritance-tooltip-content__line"
+			>
+				{ line }
+			</span>
+		) );
 }
 
 /**
@@ -90,7 +115,7 @@ export function getCommonInheritanceTooltipText( sources, paths ) {
 	if ( hasCommonBreadcrumb ) {
 		return getInheritanceTooltipText( sourceEntries[ 0 ] );
 	}
-	return __( 'Inherited from multiple Global Styles sources' );
+	return __( 'Default inherited from multiple Styles sources' );
 }
 
 /**
@@ -100,7 +125,7 @@ export function getCommonInheritanceTooltipText( sources, paths ) {
  *
  * When `isInherited` is true without a local override, the descendant
  * label text is tinted and the wrapped control receives the standard
- * "Inherited from Global Styles" tooltip.
+ * "Default inherited from:" tooltip.
  *
  * When `hasLocalOverride` is true, a small dropdown trigger is portaled
  * into the visible label and exposes a "Reset to inherited value" action.
@@ -282,8 +307,12 @@ function PortaledInheritanceControls( {
 						{ isInherited && (
 							<Tooltip
 								text={
-									inheritanceTooltipText ??
-									GENERIC_INHERITANCE_TOOLTIP_TEXT
+									<InheritanceTooltipContent
+										text={
+											inheritanceTooltipText ??
+											GENERIC_INHERITANCE_TOOLTIP_TEXT
+										}
+									/>
 								}
 							>
 								<span className="global-styles-inheritance-tooltip-anchor">

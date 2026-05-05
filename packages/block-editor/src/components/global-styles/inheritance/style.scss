@@ -26,6 +26,10 @@
 	visibility: hidden;
 }
 
+.global-styles-inheritance-tooltip-content__line {
+	display: block;
+}
+
 // Local-override interactive dot menu — portaled into the label DOM
 // node so the trigger sits inline with the label text. The
 // `<Dropdown>` outer is a div, so we force it to inline-flex to keep
@@ -88,8 +92,11 @@
 	transition: transform 0.1s ease-out;
 }
 
-.has-local-override-from-global-styles__toggle:hover .has-local-override-from-global-styles__dot,
-.has-local-override-from-global-styles__toggle:focus .has-local-override-from-global-styles__dot,
-.has-local-override-from-global-styles__toggle[aria-expanded="true"] .has-local-override-from-global-styles__dot {
+.has-local-override-from-global-styles__toggle:hover
+.has-local-override-from-global-styles__dot,
+.has-local-override-from-global-styles__toggle:focus
+.has-local-override-from-global-styles__dot,
+.has-local-override-from-global-styles__toggle[aria-expanded="true"]
+.has-local-override-from-global-styles__dot {
 	transform: scale(1.2);
 }

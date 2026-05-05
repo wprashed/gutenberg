@@ -20,9 +20,10 @@ const EMPTY_INHERITANCE = Object.freeze( { value: {}, sources: {} } );
  * Source breadcrumb part identifiers for each Global Styles inheritance layer.
  */
 const SOURCE_BREADCRUMB_PARTS = {
-	globalStyles: 'globalStyles',
+	styles: 'styles',
 	elements: 'elements',
-	block: 'block',
+	blocks: 'blocks',
+	blockName: 'blockName',
 	variation: 'variation',
 };
 
@@ -31,43 +32,47 @@ const SOURCE_BREADCRUMB_PARTS = {
  */
 const SOURCE_DESCRIPTORS = {
 	root: {
-		breadcrumb: [ SOURCE_BREADCRUMB_PARTS.globalStyles ],
+		breadcrumb: [ SOURCE_BREADCRUMB_PARTS.styles ],
 		layer: 'root',
 	},
 	rootElement: {
 		breadcrumb: [
-			SOURCE_BREADCRUMB_PARTS.globalStyles,
+			SOURCE_BREADCRUMB_PARTS.styles,
 			SOURCE_BREADCRUMB_PARTS.elements,
 		],
 		layer: 'rootElement',
 	},
 	block: {
 		breadcrumb: [
-			SOURCE_BREADCRUMB_PARTS.globalStyles,
-			SOURCE_BREADCRUMB_PARTS.block,
+			SOURCE_BREADCRUMB_PARTS.styles,
+			SOURCE_BREADCRUMB_PARTS.blocks,
+			SOURCE_BREADCRUMB_PARTS.blockName,
 		],
 		layer: 'block',
 	},
 	blockElement: {
 		breadcrumb: [
-			SOURCE_BREADCRUMB_PARTS.globalStyles,
-			SOURCE_BREADCRUMB_PARTS.block,
+			SOURCE_BREADCRUMB_PARTS.styles,
+			SOURCE_BREADCRUMB_PARTS.blocks,
+			SOURCE_BREADCRUMB_PARTS.blockName,
 			SOURCE_BREADCRUMB_PARTS.elements,
 		],
 		layer: 'blockElement',
 	},
 	blockVariation: {
 		breadcrumb: [
-			SOURCE_BREADCRUMB_PARTS.globalStyles,
-			SOURCE_BREADCRUMB_PARTS.block,
+			SOURCE_BREADCRUMB_PARTS.styles,
+			SOURCE_BREADCRUMB_PARTS.blocks,
+			SOURCE_BREADCRUMB_PARTS.blockName,
 			SOURCE_BREADCRUMB_PARTS.variation,
 		],
 		layer: 'blockVariation',
 	},
 	blockVariationElement: {
 		breadcrumb: [
-			SOURCE_BREADCRUMB_PARTS.globalStyles,
-			SOURCE_BREADCRUMB_PARTS.block,
+			SOURCE_BREADCRUMB_PARTS.styles,
+			SOURCE_BREADCRUMB_PARTS.blocks,
+			SOURCE_BREADCRUMB_PARTS.blockName,
 			SOURCE_BREADCRUMB_PARTS.variation,
 			SOURCE_BREADCRUMB_PARTS.elements,
 		],
