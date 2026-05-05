@@ -34,4 +34,9 @@ describe( 'markdownConverter', () => {
 		expect( markdownConverter( input ) ).toContain( '<li>one</li>' );
 		expect( markdownConverter( input ) ).toContain( '<li>two</li>' );
 	} );
+
+	it( 'should preserve quotes in body text for shortcode matching', () => {
+		const input = '[gallery ids="123"]';
+		expect( markdownConverter( input ) ).toContain( '[gallery ids="123"]' );
+	} );
 } );
