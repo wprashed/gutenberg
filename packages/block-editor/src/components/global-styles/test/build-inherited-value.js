@@ -402,12 +402,15 @@ describe( 'buildInheritedValue – pure builder', () => {
 						'styles',
 						'blocks',
 						'blockName',
-						'variation',
+						'variations',
+						'variationName',
 					],
 					blockName: 'core/group',
+					variation: 'subtitle',
+					variationTitle: 'Subtitle',
 				} )
 			).toBe(
-				'Default inherited from:\nStyles > Blocks > Group > Variation'
+				'Default inherited from:\nStyles > Blocks > Group > Variations > Subtitle'
 			);
 		} );
 
@@ -481,15 +484,23 @@ describe( 'buildInheritedValue – pure builder', () => {
 			const { value, sources } = buildInheritedValueWithSources( {
 				blockName: 'core/heading',
 				ownVariation: 'plain',
+				blockStyles: [ { name: 'plain', label: 'Plain' } ],
 				globalStyles: gs,
 			} );
 			expect( value.typography.fontSize ).toBe( '20px' );
 			expect( value.typography.lineHeight ).toBe( '1.5' );
 			expect( sources[ 'typography.fontSize' ] ).toMatchObject( {
-				breadcrumb: [ 'styles', 'blocks', 'blockName', 'variation' ],
+				breadcrumb: [
+					'styles',
+					'blocks',
+					'blockName',
+					'variations',
+					'variationName',
+				],
 				layer: 'blockVariation',
 				blockName: 'core/heading',
 				variation: 'plain',
+				variationTitle: 'Plain',
 				path: [ 'typography', 'fontSize' ],
 			} );
 			expect( sources[ 'typography.lineHeight' ] ).toMatchObject( {
@@ -503,6 +514,7 @@ describe( 'buildInheritedValue – pure builder', () => {
 				blockName: 'core/heading',
 				element: 'h2',
 				ownVariation: 'plain',
+				blockStyles: [ { name: 'plain', label: 'Plain' } ],
 				globalStyles: gs,
 			} );
 			expect( value.typography.fontSize ).toBe( '18px' );
@@ -511,11 +523,13 @@ describe( 'buildInheritedValue – pure builder', () => {
 					'styles',
 					'blocks',
 					'blockName',
-					'variation',
+					'variations',
+					'variationName',
 					'elements',
 					'h2',
 				],
 				layer: 'blockVariationElement',
+				variationTitle: 'Plain',
 				element: 'h2',
 			} );
 		} );

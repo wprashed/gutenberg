@@ -31,19 +31,34 @@ const BREADCRUMB_LABELS = {
 	styles: __( 'Styles' ),
 	elements: __( 'Elements' ),
 	blocks: __( 'Blocks' ),
-	variation: __( 'Variation' ),
+	variations: __( 'Variations' ),
 };
 
 function getBlockTitle( blockName ) {
 	return getBlockType( blockName )?.title ?? blockName;
 }
 
-function getTranslatedBreadcrumb( source ) {
+function getVariationTitle( variation, blockStyles, variationTitle ) {
+	return (
+		variationTitle ??
+		blockStyles?.find( ( style ) => style.name === variation )?.label ??
+		variation
+	);
+}
+
+function getTranslatedBreadcrumb( source, blockStyles ) {
 	const breadcrumb = source?.breadcrumb;
 	const parts = breadcrumb
 		.map( ( part ) => {
 			if ( part === 'blockName' ) {
 				return getBlockTitle( source.blockName );
+			}
+			if ( part === 'variationName' ) {
+				return getVariationTitle(
+					source.variation,
+					blockStyles,
+					source.variationTitle
+				);
 			}
 			return BREADCRUMB_LABELS[ part ] ?? part;
 		} )
@@ -54,17 +69,18 @@ function getTranslatedBreadcrumb( source ) {
 /**
  * Formats a source entry into user-facing tooltip text.
  *
- * @param {?Object} source Source metadata.
+ * @param {?Object} source      Source metadata.
+ * @param {Array}   blockStyles Registered styles for the block type.
  * @return {string|undefined} Tooltip text, or undefined when no source exists.
  */
-export function getInheritanceTooltipText( source ) {
+export function getInheritanceTooltipText( source, blockStyles ) {
 	const breadcrumb = source?.breadcrumb;
 	if ( ! Array.isArray( breadcrumb ) || breadcrumb.length === 0 ) {
 		return undefined;
 	}
 	return [
 		__( 'Default inherited from:' ),
-		getTranslatedBreadcrumb( source ),
+		getTranslatedBreadcrumb( source, blockStyles ),
 	].join( INHERITANCE_TOOLTIP_LINE_SEPARATOR );
 }
 
@@ -84,12 +100,13 @@ function InheritanceTooltipContent( { text } ) {
 /**
  * Formats a source entry from a source map path.
  *
- * @param {?Object} sources Source metadata keyed by dot path.
- * @param {string}  path    Dot path.
+ * @param {?Object} sources     Source metadata keyed by dot path.
+ * @param {string}  path        Dot path.
+ * @param {Array}   blockStyles Registered styles for the block type.
  * @return {string|undefined} Tooltip text, or undefined when no source exists.
  */
-export function getInheritanceTooltipTextByPath( sources, path ) {
-	return getInheritanceTooltipText( sources?.[ path ] );
+export function getInheritanceTooltipTextByPath( sources, path, blockStyles ) {
+	return getInheritanceTooltipText( sources?.[ path ], blockStyles );
 }
 
 /**
@@ -97,11 +114,12 @@ export function getInheritanceTooltipTextByPath( sources, path ) {
  * all contributing paths resolve to the same breadcrumb; mixed sources receive
  * a conservative summary.
  *
- * @param {?Object} sources Source metadata keyed by dot path.
- * @param {Array}   paths   Dot paths to inspect.
+ * @param {?Object} sources     Source metadata keyed by dot path.
+ * @param {Array}   paths       Dot paths to inspect.
+ * @param {Array}   blockStyles Registered styles for the block type.
  * @return {string|undefined} Tooltip text, or undefined when no source exists.
  */
-export function getCommonInheritanceTooltipText( sources, paths ) {
+export function getCommonInheritanceTooltipText( sources, paths, blockStyles ) {
 	const sourceEntries = paths
 		.map( ( path ) => sources?.[ path ] )
 		.filter( Boolean );
@@ -113,7 +131,7 @@ export function getCommonInheritanceTooltipText( sources, paths ) {
 		( source ) => source.breadcrumb?.join( ' > ' ) === firstBreadcrumb
 	);
 	if ( hasCommonBreadcrumb ) {
-		return getInheritanceTooltipText( sourceEntries[ 0 ] );
+		return getInheritanceTooltipText( sourceEntries[ 0 ], blockStyles );
 	}
 	return __( 'Default inherited from multiple Styles sources' );
 }

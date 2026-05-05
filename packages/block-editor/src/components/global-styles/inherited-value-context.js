@@ -22,7 +22,7 @@ import { getVariationNameFromClass } from '../../hooks/block-style-variation';
  * `null` means "no Provider above this panel"; the consumer hook then
  * returns an empty object and each panel preserves its existing behavior.
  *
- * @type {React.Context<?{ globalStyles: ?Object, blockName: ?string, ownVariation: ?string }>}
+ * @type {React.Context<?{ globalStyles: ?Object, blockName: ?string, ownVariation: ?string, blockStyles: ?Array }>}
  */
 export const InheritedValueContext = createContext( null );
 
@@ -45,19 +45,32 @@ export function InheritedValueProvider( {
 	ownVariation = null,
 	children,
 } ) {
-	const rawGlobalStylesData = useSelect(
-		( select ) =>
-			select( blockEditorStore ).getSettings()[ globalStylesDataKey ] ??
-			null,
-		[]
+	const { rawGlobalStylesData, blockStyles } = useSelect(
+		( select ) => {
+			const settings = select( blockEditorStore ).getSettings();
+			const blockStylesSelector = select( blocksStore ).getBlockStyles;
+			return {
+				rawGlobalStylesData: settings[ globalStylesDataKey ] ?? null,
+				blockStyles:
+					blockName && blockStylesSelector
+						? blockStylesSelector( blockName )
+						: [],
+			};
+		},
+		[ blockName ]
 	);
 	const globalStyles = useMemo(
 		() => ( rawGlobalStylesData ? { styles: rawGlobalStylesData } : null ),
 		[ rawGlobalStylesData ]
 	);
 	const contextValue = useMemo(
-		() => ( { globalStyles, blockName: blockName ?? null, ownVariation } ),
-		[ globalStyles, blockName, ownVariation ]
+		() => ( {
+			globalStyles,
+			blockName: blockName ?? null,
+			ownVariation,
+			blockStyles,
+		} ),
+		[ globalStyles, blockName, ownVariation, blockStyles ]
 	);
 	return (
 		<InheritedValueContext.Provider value={ contextValue }>
@@ -94,6 +107,7 @@ export function useInheritedValue( { element = null } = {} ) {
 			element,
 			ownVariation: ctx.ownVariation,
 			globalStyles: ctx.globalStyles,
+			blockStyles: ctx.blockStyles,
 		} );
 	}, [ ctx, element ] );
 }

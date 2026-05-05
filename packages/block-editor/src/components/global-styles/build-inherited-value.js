@@ -24,7 +24,8 @@ const SOURCE_BREADCRUMB_PARTS = {
 	elements: 'elements',
 	blocks: 'blocks',
 	blockName: 'blockName',
-	variation: 'variation',
+	variations: 'variations',
+	variationName: 'variationName',
 };
 
 /**
@@ -64,7 +65,8 @@ const SOURCE_DESCRIPTORS = {
 			SOURCE_BREADCRUMB_PARTS.styles,
 			SOURCE_BREADCRUMB_PARTS.blocks,
 			SOURCE_BREADCRUMB_PARTS.blockName,
-			SOURCE_BREADCRUMB_PARTS.variation,
+			SOURCE_BREADCRUMB_PARTS.variations,
+			SOURCE_BREADCRUMB_PARTS.variationName,
 		],
 		layer: 'blockVariation',
 	},
@@ -73,7 +75,8 @@ const SOURCE_DESCRIPTORS = {
 			SOURCE_BREADCRUMB_PARTS.styles,
 			SOURCE_BREADCRUMB_PARTS.blocks,
 			SOURCE_BREADCRUMB_PARTS.blockName,
-			SOURCE_BREADCRUMB_PARTS.variation,
+			SOURCE_BREADCRUMB_PARTS.variations,
+			SOURCE_BREADCRUMB_PARTS.variationName,
 			SOURCE_BREADCRUMB_PARTS.elements,
 		],
 		layer: 'blockVariationElement',
@@ -82,7 +85,7 @@ const SOURCE_DESCRIPTORS = {
 
 function createSourceDescriptor(
 	type,
-	{ blockName, variation, element } = {}
+	{ blockName, variation, element, blockStyles } = {}
 ) {
 	const descriptor = SOURCE_DESCRIPTORS[ type ];
 	if ( ! descriptor ) {
@@ -95,6 +98,9 @@ function createSourceDescriptor(
 			: [ ...descriptor.breadcrumb ],
 		blockName: blockName ?? null,
 		variation: variation ?? null,
+		variationTitle:
+			blockStyles?.find( ( style ) => style.name === variation )?.label ??
+			null,
 		element: element ?? null,
 	};
 }
@@ -363,6 +369,7 @@ export function buildInheritedValue( args = {} ) {
  * @param {?string} [args.element]      Element tag to fold (e.g. `h2`, `link`), or null for block-scope only.
  * @param {?string} [args.ownVariation] Active block style variation slug, or null.
  * @param {Object}  [args.globalStyles] The `settings[ globalStylesDataKey ]` payload.
+ * @param {Array}   [args.blockStyles]  Registered styles for the block type.
  * @return {{ value: Object, sources: Object }} Merged panel-scoped payload and source map.
  */
 export function buildInheritedValueWithSources( {
@@ -370,6 +377,7 @@ export function buildInheritedValueWithSources( {
 	element = null,
 	ownVariation = null,
 	globalStyles,
+	blockStyles = [],
 } = {} ) {
 	if ( ! globalStyles || ! globalStyles.styles ) {
 		return EMPTY_INHERITANCE;
@@ -426,6 +434,7 @@ export function buildInheritedValueWithSources( {
 					createSourceDescriptor( 'blockVariation', {
 						blockName,
 						variation: ownVariation,
+						blockStyles,
 					} )
 			  )
 			: null,
@@ -435,6 +444,7 @@ export function buildInheritedValueWithSources( {
 					createSourceDescriptor( 'blockVariationElement', {
 						blockName,
 						variation: ownVariation,
+						blockStyles,
 						element,
 					} )
 			  )
@@ -495,12 +505,17 @@ export function buildInheritedValueWithSourcesMemoized( args ) {
 		inner = new Map();
 		memo.set( gs, inner );
 	}
+	const blockStylesKey = ( args.blockStyles || [] )
+		.map( ( { name, label } ) => `${ name }:${ label }` )
+		.join( ',' );
 	const key =
 		( args.blockName || '' ) +
 		'\u0001' +
 		( args.element || '' ) +
 		'\u0001' +
-		( args.ownVariation || '' );
+		( args.ownVariation || '' ) +
+		'\u0001' +
+		blockStylesKey;
 	if ( inner.has( key ) ) {
 		return inner.get( key );
 	}
