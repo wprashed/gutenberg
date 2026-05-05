@@ -12,13 +12,13 @@ describe( 'markdownConverter', () => {
 
 	it( 'should correct Slack variant on own line', () => {
 		const input = 'test\n```test```\ntest';
-		const output = '<p>test</p>\n<pre><code>test</code></pre>\n<p>test</p>';
+		const output = '<p>test</p>\n<pre><code>test</code></pre><p>test</p>\n';
 		expect( markdownConverter( input ) ).toEqual( output );
 	} );
 
 	it( 'should not correct inline code', () => {
 		const input = 'test ```test``` test';
-		const output = '<p>test <code>test</code> test</p>';
+		const output = '<p>test <code>test</code> test</p>\n';
 		expect( markdownConverter( input ) ).toEqual( output );
 	} );
 
@@ -26,5 +26,12 @@ describe( 'markdownConverter', () => {
 		const input = '```js\ntest\n```';
 		const output = '<pre><code class="js language-js">test</code></pre>';
 		expect( markdownConverter( input ) ).toEqual( output );
+	} );
+
+	it( 'should convert bullet characters to asterisks', () => {
+		const input = '• one\n• two';
+		expect( markdownConverter( input ) ).toContain( '<ul>' );
+		expect( markdownConverter( input ) ).toContain( '<li>one</li>' );
+		expect( markdownConverter( input ) ).toContain( '<li>two</li>' );
 	} );
 } );
