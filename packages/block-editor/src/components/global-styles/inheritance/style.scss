@@ -10,10 +10,17 @@
 	.block-editor-panel-color-gradient-settings__color-name {
 		position: relative;
 		color: var(--wp-block-synced-color);
+	}
+
+	.components-base-control__label {
 		text-decoration-line: underline;
 		text-decoration-style: dotted;
 		text-decoration-thickness: 1px;
 		text-underline-offset: 0.2em;
+	}
+
+	.block-editor-panel-color-gradient-settings__color-name {
+		border-bottom: 1px dotted currentColor;
 	}
 }
 
