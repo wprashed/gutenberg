@@ -34,6 +34,7 @@ import { unlock } from '../../lock-unlock';
 import {
 	getCommonInheritanceTooltipText,
 	getInheritanceProps,
+	InheritanceActionsDropdown,
 	InheritanceToolsPanelItem,
 } from './inheritance';
 
@@ -254,13 +255,15 @@ export function ColorPanelDropdown( {
 		inheritedSources,
 		tabSourcePaths
 	);
+	const hasLocalOverride = hasValue() && hasInheritedValue;
 	return (
 		<InheritanceToolsPanelItem
 			{ ...inheritanceProps(
 				isPlaceholder,
-				hasValue() && hasInheritedValue,
+				hasLocalOverride,
 				className
 			) }
+			showLocalOverrideActionsInLabel={ false }
 			hasValue={ hasValue }
 			label={ label }
 			inheritanceTooltipText={ inheritanceTooltipText }
@@ -290,23 +293,36 @@ export function ColorPanelDropdown( {
 									label={ label }
 								/>
 							</Button>
-							{ hasValue() && (
-								<Button
-									__next40pxDefaultSize
-									label={ __( 'Reset' ) }
-									className="block-editor-panel-color-gradient-settings__reset"
-									size="small"
-									icon={ resetIcon }
-									onClick={ () => {
-										resetValue();
-										if ( isOpen ) {
-											onToggle();
-										}
-										// Return focus to parent button
-										colorGradientDropdownButtonRef.current?.focus();
-									} }
-								/>
-							) }
+							{ hasValue() &&
+								( hasLocalOverride ? (
+									<InheritanceActionsDropdown
+										className="block-editor-panel-color-gradient-settings__reset"
+										onResetToInherited={ () => {
+											resetValue();
+											if ( isOpen ) {
+												onToggle();
+											}
+											// Return focus to parent button.
+											colorGradientDropdownButtonRef.current?.focus();
+										} }
+									/>
+								) : (
+									<Button
+										__next40pxDefaultSize
+										label={ __( 'Reset' ) }
+										className="block-editor-panel-color-gradient-settings__reset"
+										size="small"
+										icon={ resetIcon }
+										onClick={ () => {
+											resetValue();
+											if ( isOpen ) {
+												onToggle();
+											}
+											// Return focus to parent button.
+											colorGradientDropdownButtonRef.current?.focus();
+										} }
+									/>
+								) ) }
 						</>
 					);
 				} }

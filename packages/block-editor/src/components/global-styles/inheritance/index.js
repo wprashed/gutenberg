@@ -198,13 +198,21 @@ export function getInheritanceProps(
  *
  * @param {Object}   props
  * @param {Function} props.onResetToInherited Reset handler.
+ * @param {string}   [props.className]        Optional className for the
+ *                                            dropdown wrapper.
  *
  * @return {Element} The dot menu.
  */
-function InheritanceDot( { onResetToInherited } ) {
+export function InheritanceActionsDropdown( {
+	onResetToInherited,
+	className,
+} ) {
 	return (
 		<Dropdown
-			className="has-local-override-from-global-styles__menu"
+			className={ clsx(
+				'has-local-override-from-global-styles__menu',
+				className
+			) }
 			contentClassName="has-local-override-from-global-styles__menu-content"
 			popoverProps={ { placement: 'bottom-start' } }
 			renderToggle={ ( { isOpen, onToggle } ) => (
@@ -341,7 +349,7 @@ function PortaledInheritanceControls( {
 							</Tooltip>
 						) }
 						{ onResetToInherited && (
-							<InheritanceDot
+							<InheritanceActionsDropdown
 								onResetToInherited={ onResetToInherited }
 							/>
 						) }
@@ -352,40 +360,13 @@ function PortaledInheritanceControls( {
 	);
 }
 
-/**
- * Drop-in replacement for `<ToolsPanelItem>` that automatically wires
- * the inherited-from-Global-Styles visual treatment and the
- * local-override interactive menu (blue dot + dropdown).
- *
- * Panels swap `<ToolsPanelItem>` for `<InheritanceToolsPanelItem>` and
- * keep the existing `{ ...getInheritanceProps( a, b ) }` spread. The
- * wrapper reads the explicit inheritance booleans from that spread so
- * class names remain presentational rather than stateful.
- *
- * The reset action wired into the override menu calls `onDeselect`,
- * which is the same callback `ToolsPanel` uses for its native
- * "Reset" menu item — so the override menu reset re-uses the existing
- * `attributesResetAllFilter` pipeline and yields a single
- * `setAttributes` undo step.
- *
- * @param {Object}   props
- * @param {string}   [props.className]            ClassName forwarded to ToolsPanelItem.
- * @param {boolean}  [props.isInherited]          Whether the control inherits at rest.
- * @param {boolean}  [props.hasLocalOverride]     Whether the control overrides an inherited value.
- * @param {string}   props.label                  Visible label.
- * @param {Function} props.onDeselect             Reset handler.
- * @param {string}   props.inheritanceTooltipText Tooltip text for inherited
- *                                                controls.
- * @param {Element}  props.children               Inner control.
- *
- * @return {Element} The wrapped ToolsPanelItem.
- */
 export function InheritanceToolsPanelItem( {
 	className,
 	isInherited,
 	hasLocalOverride,
 	label,
 	onDeselect,
+	showLocalOverrideActionsInLabel = true,
 	inheritanceTooltipText,
 	children,
 	...rest
@@ -403,7 +384,9 @@ export function InheritanceToolsPanelItem( {
 					inheritanceTooltipText={ inheritanceTooltipText }
 					isInherited={ isInherited }
 					onResetToInherited={
-						hasLocalOverride ? onDeselect : undefined
+						hasLocalOverride && showLocalOverrideActionsInLabel
+							? onDeselect
+							: undefined
 					}
 				/>
 			) }

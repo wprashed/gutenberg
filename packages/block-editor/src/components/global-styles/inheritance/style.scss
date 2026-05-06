@@ -10,6 +10,10 @@
 	.block-editor-panel-color-gradient-settings__color-name {
 		position: relative;
 		color: var(--wp-block-synced-color);
+		text-decoration-line: underline;
+		text-decoration-style: dotted;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.2em;
 	}
 }
 
@@ -39,6 +43,16 @@
 	align-items: center;
 	vertical-align: middle;
 	margin-inline-start: 6px;
+
+	&.block-editor-panel-color-gradient-settings__reset {
+		align-items: center;
+		justify-content: center;
+		top: 50%;
+		transform: translateY(-50%);
+		margin-block: 0;
+		margin-inline-start: 0;
+		opacity: 1;
+	}
 
 	// `<Dropdown>` itself does not preserve text-transform overrides
 	// from its parent label. Belt-and-braces: ensure the trigger
