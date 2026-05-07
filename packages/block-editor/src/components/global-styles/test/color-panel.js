@@ -118,6 +118,31 @@ describe( 'ColorPanel — inherited Global Styles label treatment', () => {
 
 			expect( onChange ).not.toHaveBeenCalled();
 		} );
+
+		it( 'keeps the standard reset button when inheritance label indicators are disabled', () => {
+			const inheritedValue = { color: { text: '#ff0000' } };
+			const value = { color: { text: '#0000ff' } };
+
+			render(
+				<ColorPanel
+					value={ value }
+					inheritedValue={ inheritedValue }
+					settings={ baseSettings }
+					onChange={ () => {} }
+					panelId="test-panel"
+					showInheritanceLabelIndicators={ false }
+				/>
+			);
+
+			expect(
+				screen.queryByRole( 'button', {
+					name: 'Local override options',
+				} )
+			).not.toBeInTheDocument();
+			expect(
+				screen.getByRole( 'button', { name: 'Reset' } )
+			).toBeInTheDocument();
+		} );
 	} );
 
 	describe( 'Background color', () => {

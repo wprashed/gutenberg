@@ -255,7 +255,8 @@ export function ColorPanelDropdown( {
 		inheritedSources,
 		tabSourcePaths
 	);
-	const hasLocalOverride = hasValue() && hasInheritedValue;
+	const hasLocalOverride =
+		showInheritanceLabelIndicators && hasValue() && hasInheritedValue;
 	return (
 		<InheritanceToolsPanelItem
 			{ ...inheritanceProps(
