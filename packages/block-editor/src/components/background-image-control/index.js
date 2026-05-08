@@ -750,7 +750,7 @@ export default function BackgroundImagePanel( {
 					onToggle={ setIsDropDownOpen }
 					hasImageValue={ hasImageValue }
 					hasLocalOverride={ hasLocalOverride }
-					onReset={ resetBackground }
+					onReset={ localHasImageValue ? resetBackground : undefined }
 					containerRef={ containerRef }
 				>
 					<VStack spacing={ 3 } className="single-column">
