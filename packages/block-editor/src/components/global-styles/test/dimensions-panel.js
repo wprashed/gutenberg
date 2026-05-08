@@ -300,7 +300,7 @@ describe( 'DimensionsPanel — per-control placeholder pattern', () => {
 		// by the role-derived label confirms the placeholder reaches
 		// the inner UnitControl via inputProps and the className lands
 		// on the inner input wrapper for SCSS targeting.
-		const paddingGroup = screen.getByRole( 'group', { name: 'Padding' } );
+		const paddingGroup = screen.getByRole( 'group', { name: /Padding/ } );
 		const paddingAllSides = within( paddingGroup ).getByRole( 'textbox', {
 			name: 'All sides',
 		} );
@@ -334,7 +334,7 @@ describe( 'DimensionsPanel — per-control placeholder pattern', () => {
 			/>
 		);
 
-		const paddingGroup = screen.getByRole( 'group', { name: 'Padding' } );
+		const paddingGroup = screen.getByRole( 'group', { name: /Padding/ } );
 		const paddingAllSides = within( paddingGroup ).getByRole( 'textbox', {
 			name: 'All sides',
 		} );

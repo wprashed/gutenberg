@@ -33,7 +33,10 @@ jest.mock( '../../components/global-styles/inherited-value-context', () => ( {
 		mockProviderRecorder.calls.push( { blockName, ownVariation } );
 		return children;
 	},
-	useInheritedValue: () => mockInheritedReturn.value,
+	useInheritedValue: () => ( {
+		value: mockInheritedReturn.value,
+		sources: {},
+	} ),
 	useOwnVariation: () => mockVariationReturn.value,
 } ) );
 
