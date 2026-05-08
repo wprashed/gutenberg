@@ -39,6 +39,7 @@ import { getResolvedValue } from '@wordpress/global-styles-engine';
  * Internal dependencies
  */
 import { hasBackgroundImageValue } from '../global-styles/background-panel';
+import { InheritanceActionsDropdown } from '../global-styles/inheritance';
 import { setImmutably } from '../../utils/object';
 import MediaReplaceFlow from '../media-replace-flow';
 import { store as blockEditorStore } from '../../store';
@@ -193,6 +194,7 @@ function BackgroundControlsPanel( {
 	onToggle: onToggleCallback = noop,
 	hasImageValue,
 	onReset,
+	hasLocalOverride,
 	containerRef,
 } ) {
 	if ( ! hasImageValue ) {
@@ -225,24 +227,38 @@ function BackgroundControlsPanel( {
 							as="button"
 							onToggleCallback={ onToggleCallback }
 						/>
-						{ onReset && (
-							<Button
-								__next40pxDefaultSize
-								label={ __( 'Reset' ) }
-								className="block-editor-global-styles-background-panel__reset"
-								size="small"
-								icon={ resetIcon }
-								onClick={ () => {
-									onReset();
-									// Close the dropdown if open.
-									if ( isOpen ) {
-										onToggle();
-									}
-									// Focus the toggle button.
-									focusToggleButton( containerRef );
-								} }
-							/>
-						) }
+						{ onReset &&
+							( hasLocalOverride ? (
+								<InheritanceActionsDropdown
+									className="block-editor-global-styles-background-panel__reset"
+									onResetToInherited={ () => {
+										onReset();
+										// Close the dropdown if open.
+										if ( isOpen ) {
+											onToggle();
+										}
+										// Focus the toggle button.
+										focusToggleButton( containerRef );
+									} }
+								/>
+							) : (
+								<Button
+									__next40pxDefaultSize
+									label={ __( 'Reset' ) }
+									className="block-editor-global-styles-background-panel__reset"
+									size="small"
+									icon={ resetIcon }
+									onClick={ () => {
+										onReset();
+										// Close the dropdown if open.
+										if ( isOpen ) {
+											onToggle();
+										}
+										// Focus the toggle button.
+										focusToggleButton( containerRef );
+									} }
+								/>
+							) ) }
 					</>
 				);
 			} }
@@ -692,9 +708,11 @@ export default function BackgroundImagePanel( {
 	const { title, url } = value?.background?.backgroundImage || {
 		...resolvedInheritedValue?.background?.backgroundImage,
 	};
+	const localHasImageValue = hasBackgroundImageValue( value );
 	const hasImageValue =
-		hasBackgroundImageValue( value ) ||
-		hasBackgroundImageValue( resolvedInheritedValue );
+		localHasImageValue || hasBackgroundImageValue( resolvedInheritedValue );
+	const hasLocalOverride =
+		localHasImageValue && hasBackgroundImageValue( resolvedInheritedValue );
 
 	const imageValue =
 		value?.background?.backgroundImage ||
@@ -727,6 +745,7 @@ export default function BackgroundImagePanel( {
 					url={ url }
 					onToggle={ setIsDropDownOpen }
 					hasImageValue={ hasImageValue }
+					hasLocalOverride={ hasLocalOverride }
 					onReset={ resetBackground }
 					containerRef={ containerRef }
 				>

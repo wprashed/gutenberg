@@ -262,6 +262,7 @@ export default function BackgroundImagePanel( {
 							} ),
 						'block-editor-background-panel__item'
 					) }
+					showLocalOverrideActionsInLabel={ false }
 					hasValue={ () => hasBackgroundImageValue( value ) }
 					label={ __( 'Image' ) }
 					inheritanceTooltipText={ tooltipText(
