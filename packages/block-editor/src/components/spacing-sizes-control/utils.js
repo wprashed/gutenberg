@@ -64,10 +64,14 @@ export const VIEWS = {
  * @return {boolean} Return true if value is string in format var:preset|spacing|.
  */
 export function isValueSpacingPreset( value ) {
+	// Numeric 0 (and string '0') corresponds to the `'0'` (None) preset.
+	if ( value === 0 || value === '0' ) {
+		return true;
+	}
 	if ( ! value?.includes ) {
 		return false;
 	}
-	return value === '0' || value.includes( 'var:preset|spacing|' );
+	return value.includes( 'var:preset|spacing|' );
 }
 
 /**

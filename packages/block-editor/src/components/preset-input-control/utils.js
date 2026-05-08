@@ -1,9 +1,13 @@
 export const isValuePreset = ( value, slug ) => {
+	// Numeric 0 (and string '0') corresponds to the `'0'` (None) preset.
+	if ( value === 0 || value === '0' ) {
+		return true;
+	}
 	if ( ! value?.includes ) {
 		return false;
 	}
 
-	return value === '0' || value.includes( `var:preset|${ slug }|` );
+	return value.includes( `var:preset|${ slug }|` );
 };
 
 /**
