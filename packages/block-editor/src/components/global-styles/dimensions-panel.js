@@ -149,6 +149,50 @@ function hasValue( value ) {
 	return ! EMPTY_VALUES.includes( value );
 }
 
+/**
+ * Layers whose contributions should not bubble up into block-level
+ * spacing/dimensions controls. Root-level `spacing.padding`, `spacing.margin`,
+ * and `spacing.blockGap` apply to the post content wrapper or root selector
+ * only — they are not CSS-inherited cascade properties, so descendant block
+ * panels should not surface them as "inherited" placeholders.
+ */
+const NON_CASCADING_ROOT_LAYERS = new Set( [ 'root', 'rootElement' ] );
+
+function isRootSourced( sources, pathKey ) {
+	return NON_CASCADING_ROOT_LAYERS.has( sources?.[ pathKey ]?.layer );
+}
+
+/**
+ * Drops sides from a sides-shaped (or shorthand) inherited value when the
+ * winning source for that side is the root layer. Returns `undefined` when
+ * nothing remains. Leaves block- and variation-sourced values intact.
+ *
+ * @param {Object|string|undefined} value    Inherited value at `basePath`.
+ * @param {Object}                  sources  Source map keyed by dot-path.
+ * @param {string}                  basePath Dot-path of `value` (e.g. `spacing.padding`).
+ * @return {Object|string|undefined} Filtered value, or `undefined` if all sides were root-sourced.
+ */
+function dropRootSourcedSides( value, sources, basePath ) {
+	if ( ! hasValue( value ) ) {
+		return value;
+	}
+	if ( typeof value === 'string' ) {
+		return isRootSourced( sources, basePath ) ? undefined : value;
+	}
+	if ( typeof value !== 'object' ) {
+		return value;
+	}
+	const filtered = {};
+	let kept = false;
+	for ( const sideKey of Object.keys( value ) ) {
+		if ( ! isRootSourced( sources, `${ basePath }.${ sideKey }` ) ) {
+			filtered[ sideKey ] = value[ sideKey ];
+			kept = true;
+		}
+	}
+	return kept ? filtered : undefined;
+}
+
 function splitStyleValue( value ) {
 	// Check for shorthand value (a string value).
 	if ( hasValue( value ) && typeof value === 'string' ) {
@@ -399,7 +443,13 @@ export default function DimensionsPanel( {
 	// Padding
 	const showPaddingControl = hasPadding( settings );
 	const inheritedPaddingValues = splitStyleValue(
-		decodeValue( inheritedValue?.spacing?.padding )
+		decodeValue(
+			dropRootSourcedSides(
+				inheritedValue?.spacing?.padding,
+				inheritedSources,
+				'spacing.padding'
+			)
+		)
 	);
 	// Local-only values feed BoxControl's `values` (with the inherited
 	// surfaced via the at-rest placeholder).
@@ -443,7 +493,13 @@ export default function DimensionsPanel( {
 	// Margin
 	const showMarginControl = hasMargin( settings );
 	const inheritedMarginValues = splitStyleValue(
-		decodeValue( inheritedValue?.spacing?.margin )
+		decodeValue(
+			dropRootSourcedSides(
+				inheritedValue?.spacing?.margin,
+				inheritedSources,
+				'spacing.margin'
+			)
+		)
 	);
 	const localMarginValues = splitStyleValue(
 		decodeValue( value?.spacing?.margin )
@@ -487,7 +543,12 @@ export default function DimensionsPanel( {
 	const isAxialGap =
 		gapSides && gapSides.some( ( side ) => AXIAL_SIDES.includes( side ) );
 	const localGapRaw = decodeValue( value?.spacing?.blockGap );
-	const inheritedGapRaw = decodeValue( inheritedValue?.spacing?.blockGap );
+	const inheritedGapRaw = isRootSourced(
+		inheritedSources,
+		'spacing.blockGap'
+	)
+		? undefined
+		: decodeValue( inheritedValue?.spacing?.blockGap );
 	// Merge local-then-inherited so SpacingSizesControl's chip slider and
 	// the axial-gap BoxControl reflect the local value when set and fall
 	// back to the inherited value at rest.

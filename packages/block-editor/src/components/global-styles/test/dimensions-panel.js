@@ -950,4 +950,122 @@ describe( 'DimensionsPanel — per-control placeholder pattern', () => {
 			gapInput.closest( '.has-local-override-from-global-styles' )
 		).not.toBeNull();
 	} );
+
+	it( 'does not surface root-sourced spacing.padding as inherited on a block panel', () => {
+		const settingsWithSpacingPresets = {
+			...baseSettings,
+			spacing: {
+				...baseSettings.spacing,
+				spacingSizes: {
+					default: [
+						{ name: 'Small', slug: '20', size: '12px' },
+						{ name: 'Medium', slug: '40', size: '24px' },
+						{ name: 'Large', slug: '60', size: '48px' },
+					],
+				},
+				defaultSpacingSizes: true,
+			},
+		};
+		// Mirrors the Twenty Twenty-Five + WP core defaults case where
+		// root-level padding is `{ top: '0px', right: 'var:preset|spacing|50',
+		// bottom: '0px', left: 'var:preset|spacing|50' }` and there's no
+		// block-level padding override for the block being inspected.
+		const inheritedValue = {
+			spacing: {
+				padding: {
+					top: '0px',
+					right: 'var:preset|spacing|40',
+					bottom: '0px',
+					left: 'var:preset|spacing|40',
+				},
+			},
+		};
+		const inheritedSources = {
+			'spacing.padding.top': { layer: 'root' },
+			'spacing.padding.right': { layer: 'root' },
+			'spacing.padding.bottom': { layer: 'root' },
+			'spacing.padding.left': { layer: 'root' },
+		};
+
+		render(
+			<DimensionsPanel
+				value={ {} }
+				inheritedValue={ inheritedValue }
+				inheritedSources={ inheritedSources }
+				settings={ settingsWithSpacingPresets }
+				onChange={ () => {} }
+				panelId="test-panel"
+			/>
+		);
+
+		// The root-sourced inherited padding must not flip the
+		// SpacingSizesControl into custom-value mode.
+		const spinButtons = screen.queryAllByRole( 'spinbutton' );
+		const paddingSpinButtons = spinButtons.filter( ( s ) =>
+			/padding/i.test( s.getAttribute( 'aria-label' ) || '' )
+		);
+		expect( paddingSpinButtons ).toHaveLength( 0 );
+
+		// Sliders should sit at the None preset position because no
+		// inherited padding is surfaced.
+		const sliders = screen.getAllByRole( 'slider' );
+		const paddingSliders = sliders.filter( ( s ) =>
+			/padding/i.test( s.getAttribute( 'aria-label' ) || '' )
+		);
+		expect( paddingSliders.length ).toBeGreaterThan( 0 );
+		expect( paddingSliders.every( ( s ) => s.value === '0' ) ).toBe( true );
+	} );
+
+	it( 'still surfaces block-sourced inherited padding on a block panel', () => {
+		const settingsWithSpacingPresets = {
+			...baseSettings,
+			spacing: {
+				...baseSettings.spacing,
+				spacingSizes: {
+					default: [
+						{ name: 'Small', slug: '20', size: '12px' },
+						{ name: 'Medium', slug: '40', size: '24px' },
+						{ name: 'Large', slug: '60', size: '48px' },
+					],
+				},
+				defaultSpacingSizes: true,
+			},
+		};
+		const inheritedValue = {
+			spacing: {
+				padding: {
+					top: 'var:preset|spacing|40',
+					right: 'var:preset|spacing|40',
+					bottom: 'var:preset|spacing|40',
+					left: 'var:preset|spacing|40',
+				},
+			},
+		};
+		const inheritedSources = {
+			'spacing.padding.top': { layer: 'block' },
+			'spacing.padding.right': { layer: 'block' },
+			'spacing.padding.bottom': { layer: 'block' },
+			'spacing.padding.left': { layer: 'block' },
+		};
+
+		render(
+			<DimensionsPanel
+				value={ {} }
+				inheritedValue={ inheritedValue }
+				inheritedSources={ inheritedSources }
+				settings={ settingsWithSpacingPresets }
+				onChange={ () => {} }
+				panelId="test-panel"
+			/>
+		);
+
+		const sliders = screen.getAllByRole( 'slider' );
+		const paddingSliders = sliders.filter( ( s ) =>
+			/padding/i.test( s.getAttribute( 'aria-label' ) || '' )
+		);
+		expect( paddingSliders.length ).toBeGreaterThan( 0 );
+		// Inherited Medium (slug 40) lands at preset index 2 (None=0,
+		// Small=1, Medium=2). All sliders should reflect that.
+		expect( paddingSliders.every( ( s ) => s.value === '2' ) ).toBe( true );
+	} );
 } );
