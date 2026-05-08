@@ -7,12 +7,14 @@
 
 .is-inherited-from-global-styles {
 	.components-base-control__label,
-	.block-editor-panel-color-gradient-settings__color-name {
+	.block-editor-panel-color-gradient-settings__color-name,
+	.block-editor-global-styles-background-panel__inspector-media-replace-title {
 		position: relative;
 		color: var(--wp-block-synced-color);
 	}
 
-	.components-base-control__label {
+	.components-base-control__label,
+	.block-editor-global-styles-background-panel__inspector-media-replace-title {
 		text-decoration-line: underline;
 		text-decoration-style: dotted;
 		text-decoration-thickness: 1px;
