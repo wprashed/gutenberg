@@ -112,6 +112,44 @@ export function useInheritedValue( { element = null } = {} ) {
 	}, [ ctx, element ] );
 }
 
+export function useInheritedStyleValue( {
+	blockName,
+	element = null,
+	ownVariation = null,
+} ) {
+	const { rawGlobalStylesData, blockStyles } = useSelect(
+		( select ) => {
+			const settings = select( blockEditorStore ).getSettings();
+			const blockStylesSelector = select( blocksStore ).getBlockStyles;
+			return {
+				rawGlobalStylesData: settings[ globalStylesDataKey ] ?? null,
+				blockStyles:
+					blockName && blockStylesSelector
+						? blockStylesSelector( blockName )
+						: [],
+			};
+		},
+		[ blockName ]
+	);
+	const globalStyles = useMemo(
+		() => ( rawGlobalStylesData ? { styles: rawGlobalStylesData } : null ),
+		[ rawGlobalStylesData ]
+	);
+
+	return useMemo( () => {
+		if ( ! blockName ) {
+			return { value: {}, sources: {} };
+		}
+		return buildInheritedValueWithSourcesMemoized( {
+			blockName,
+			element,
+			ownVariation,
+			globalStyles,
+			blockStyles,
+		} );
+	}, [ blockName, element, ownVariation, globalStyles, blockStyles ] );
+}
+
 /**
  * Hook: derives the active block-style-variation slug from a block's
  * `className` by matching registered styles via

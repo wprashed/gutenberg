@@ -98,6 +98,59 @@ export function hasBackgroundGradientValue( style ) {
 	);
 }
 
+const BACKGROUND_STYLE_KEYS = [
+	'backgroundImage',
+	'gradient',
+	'backgroundPosition',
+	'backgroundRepeat',
+	'backgroundSize',
+	'backgroundAttachment',
+];
+
+export function mergeInheritedBackgroundStyle( style, inheritedStyle ) {
+	const hasLocalBackgroundStyle =
+		!! style?.color?.gradient ||
+		BACKGROUND_STYLE_KEYS.some(
+			( key ) => style?.background?.[ key ] !== undefined
+		);
+
+	if ( ! hasLocalBackgroundStyle ) {
+		return style;
+	}
+
+	const mergedBackground = BACKGROUND_STYLE_KEYS.reduce( ( acc, key ) => {
+		const value = style?.background?.[ key ];
+		const inheritedValue = inheritedStyle?.background?.[ key ];
+
+		if ( value !== undefined ) {
+			acc[ key ] = value;
+		} else if ( inheritedValue !== undefined ) {
+			acc[ key ] = inheritedValue;
+		}
+
+		return acc;
+	}, {} );
+
+	if (
+		mergedBackground.gradient === undefined &&
+		inheritedStyle?.color?.gradient !== undefined
+	) {
+		mergedBackground.gradient = inheritedStyle.color.gradient;
+	}
+
+	if ( Object.keys( mergedBackground ).length === 0 ) {
+		return style;
+	}
+
+	return {
+		...style,
+		background: {
+			...style?.background,
+			...mergedBackground,
+		},
+	};
+}
+
 function BackgroundToolsPanel( {
 	resetAllFilter,
 	onChange,

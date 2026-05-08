@@ -703,7 +703,11 @@ export default function BackgroundImagePanel( {
 	}, [ globalStyles, _links, inheritedValue ] );
 
 	const resetBackground = () =>
-		onChange( setImmutably( value, [ 'background' ], {} ) );
+		onChange(
+			setImmutably( value, [ 'background' ], {
+				gradient: value?.background?.gradient,
+			} )
+		);
 
 	const { title, url } = value?.background?.backgroundImage || {
 		...resolvedInheritedValue?.background?.backgroundImage,
