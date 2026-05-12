@@ -17,6 +17,8 @@ import { useCropGestureHandlers } from '../../hooks/use-crop-gesture-handlers';
 import { MAX_ZOOM } from '../../image-editor/core/constants';
 import { getMinZoom } from '../../image-editor/core/containment';
 import type { AspectRatioPreset } from '../../image-editor/core/constants';
+import { resolveAspectRatio } from '../media-editor/use-crop-options';
+import CropAdvancedPanel from './crop-advanced-panel';
 
 export interface MediaEditorCropPanelProps {
 	/**
@@ -60,6 +62,13 @@ export default function MediaEditorCropPanel( {
 	const { state, setZoom } = useCropper();
 	const zoomGestureHandlers = useCropGestureHandlers();
 	const minZoom = getMinZoom( state );
+	const imageAspectRatio = state.image
+		? state.image.naturalWidth / state.image.naturalHeight
+		: null;
+	const resolvedAspectRatio = resolveAspectRatio(
+		aspectRatioValue,
+		imageAspectRatio
+	);
 
 	return (
 		<Stack direction="column" gap="md">
@@ -108,6 +117,11 @@ export default function MediaEditorCropPanel( {
 					} }
 				/>
 			</div>
+			<CropAdvancedPanel
+				aspectRatio={ resolvedAspectRatio }
+				freeformCrop={ freeformCrop }
+				onPlacementControlInteraction={ onPlacementControlInteraction }
+			/>
 		</Stack>
 	);
 }
