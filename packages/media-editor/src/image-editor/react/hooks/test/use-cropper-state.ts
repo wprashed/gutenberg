@@ -1193,7 +1193,7 @@ describe( 'useCropperState', () => {
 			expect( result.current.state.zoom ).toBe( settledState.zoom );
 		} );
 
-		it( 'records a paused same-tick crop session as one undo step', () => {
+		it( 'records a paused settled crop session as one undo step after release', () => {
 			const { result } = renderHook( () =>
 				useCropperState( {
 					image: {
@@ -1204,9 +1204,10 @@ describe( 'useCropperState', () => {
 				} )
 			);
 			const initialState = result.current.state;
+			let resumeHistory: () => void = () => {};
 
 			act( () => {
-				result.current.pauseHistory();
+				resumeHistory = result.current.pauseHistory();
 				result.current.setCropRect( {
 					x: 0.25,
 					y: 0.25,
@@ -1214,7 +1215,13 @@ describe( 'useCropperState', () => {
 					height: 0.5,
 				} );
 				result.current.settleCrop();
-				result.current.resumeHistory();
+			} );
+
+			expect( result.current.hasUndo ).toBe( false );
+
+			act( () => {
+				resumeHistory();
+				result.current.settleCrop();
 			} );
 			const finalState = result.current.state;
 
@@ -1232,6 +1239,23 @@ describe( 'useCropperState', () => {
 				finalState.cropRect
 			);
 			expect( result.current.state.zoom ).toBe( finalState.zoom );
+		} );
+
+		it( 'only resumes a paused history session once', () => {
+			const { result } = renderHook( () => useCropperState() );
+
+			let resumeHistory: () => void;
+			act( () => {
+				resumeHistory = result.current.pauseHistory();
+				result.current.setZoom( 3 );
+				resumeHistory();
+				resumeHistory();
+				result.current.commitHistory();
+			} );
+
+			expect( result.current.hasUndo ).toBe( true );
+			act( () => result.current.undo() );
+			expect( result.current.state.zoom ).toBe( 1 );
 		} );
 	} );
 
