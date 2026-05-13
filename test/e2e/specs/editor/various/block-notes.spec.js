@@ -59,7 +59,7 @@ test.describe( 'Block Notes', () => {
 				name: 'New note',
 				exact: true,
 			} )
-			.fill( 'A test comment' );
+			.pressSequentially( 'A test comment' );
 		await page
 			.getByRole( 'region', { name: 'Editor settings' } )
 			.getByRole( 'button', { name: 'Add note', exact: true } )
@@ -86,7 +86,7 @@ test.describe( 'Block Notes', () => {
 			.locator( '.editor-collab-sidebar-panel__note-content' )
 			.last();
 
-		await commentForm.fill( 'Test reply' );
+		await commentForm.pressSequentially( 'Test reply' );
 		await page
 			.getByRole( 'region', { name: 'Editor settings' } )
 			.getByRole( 'button', { name: 'Reply', exact: true } )
@@ -106,10 +106,12 @@ test.describe( 'Block Notes', () => {
 			comment: 'test comment before edit',
 		} );
 		await blockNoteUtils.clickBlockNoteActionMenuItem( 'Edit' );
-		await page
+		const editTextbox = page
 			.getByRole( 'textbox', { name: 'Note' } )
-			.first()
-			.fill( 'Test comment after edit.' );
+			.first();
+		await editTextbox.click();
+		await page.keyboard.press( 'ControlOrMeta+a' );
+		await page.keyboard.type( 'Test comment after edit.' );
 		await page
 			.getByRole( 'region', { name: 'Editor settings' } )
 			.getByRole( 'button', { name: 'Update', exact: true } )
@@ -210,7 +212,9 @@ test.describe( 'Block Notes', () => {
 		await page.locator( '.editor-collab-sidebar-panel__thread' ).click();
 		await expect( resolveButton ).toBeDisabled();
 		const commentForm = page.getByRole( 'textbox', { name: 'Reply to' } );
-		await commentForm.fill( 'Test reply that reopens the comment.' );
+		await commentForm.pressSequentially(
+			'Test reply that reopens the comment.'
+		);
 		await page
 			.getByRole( 'region', { name: 'Editor settings' } )
 			.getByRole( 'button', { name: 'Reopen & Reply', exact: true } )
@@ -560,9 +564,9 @@ test.describe( 'Block Notes', () => {
 				.getByRole( 'region', { name: 'Editor settings' } )
 				.getByRole( 'button', { name: 'Reply', exact: true } );
 
-			await replyForm.fill( 'First reply' );
+			await replyForm.pressSequentially( 'First reply' );
 			await replyButton.click();
-			await replyForm.fill( 'Second reply' );
+			await replyForm.pressSequentially( 'Second reply' );
 			await replyButton.click();
 
 			// Check that two replies were added.
@@ -684,7 +688,7 @@ test.describe( 'Block Notes', () => {
 			const commentForm = page.getByRole( 'textbox', {
 				name: 'Reply to',
 			} );
-			await commentForm.fill( 'Test reply' );
+			await commentForm.pressSequentially( 'Test reply' );
 			await page
 				.getByRole( 'region', { name: 'Editor settings' } )
 				.getByRole( 'button', { name: 'Reply', exact: true } )
@@ -798,10 +802,12 @@ test.describe( 'Block Notes', () => {
 
 			// Test focus on action button when note is updated.
 			await blockNoteUtils.clickBlockNoteActionMenuItem( 'Edit' );
-			await page
+			const editTextbox = page
 				.getByRole( 'textbox', { name: 'Note' } )
-				.first()
-				.fill( 'Test comment after edit.' );
+				.first();
+			await editTextbox.click();
+			await page.keyboard.press( 'ControlOrMeta+a' );
+			await page.keyboard.type( 'Test comment after edit.' );
 			await page
 				.getByRole( 'region', { name: 'Editor settings' } )
 				.getByRole( 'button', { name: 'Update' } )
@@ -834,14 +840,14 @@ test.describe( 'Block Notes', () => {
 					name: 'Note: A test comment',
 				} );
 
-			await textbox.fill( '' );
+			await textbox.click();
 			await pageUtils.pressKeys( 'primary+Enter' );
 			await expect(
 				textbox,
 				`doesn't sumbit an empty form and focus remains in the textbox`
 			).toBeFocused();
 
-			await textbox.fill( 'A test comment' );
+			await textbox.pressSequentially( 'A test comment' );
 			await pageUtils.pressKeys( 'primary+Enter' );
 
 			await expect( thread ).toBeVisible();
@@ -869,7 +875,7 @@ test.describe( 'Block Notes', () => {
 					name: 'Note: A test comment',
 				} );
 
-			await textbox.fill( 'A test comment' );
+			await textbox.pressSequentially( 'A test comment' );
 			await pageUtils.pressKeys( 'primary+Enter' );
 
 			await expect( thread ).toBeVisible();
@@ -897,7 +903,7 @@ test.describe( 'Block Notes', () => {
 				exact: true,
 			} );
 			await expect( newNoteForm ).toBeFocused();
-			await newNoteForm.fill( 'Second note on block' );
+			await newNoteForm.pressSequentially( 'Second note on block' );
 			await page
 				.getByRole( 'region', { name: 'Editor settings' } )
 				.getByRole( 'button', { name: 'Add note', exact: true } )
@@ -1128,7 +1134,7 @@ class BlockNoteUtils {
 		await this.#editor.clickBlockOptionsMenuItem( 'Add note' );
 		await this.#page
 			.getByRole( 'textbox', { name: 'New note', exact: true } )
-			.fill( content );
+			.pressSequentially( content );
 		await this.#page
 			.getByRole( 'region', { name: 'Editor settings' } )
 			.getByRole( 'button', { name: 'Add note', exact: true } )
