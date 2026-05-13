@@ -164,7 +164,7 @@ export function useNoteActions() {
 		} );
 	};
 
-	const onCreate = async ( { content, parent } ) => {
+	const onCreate = async ( { content, parent, blockClientId } ) => {
 		try {
 			const savedRecord = await saveEntityRecord(
 				'root',
@@ -185,7 +185,10 @@ export function useNoteActions() {
 			// a 2-element array and the later write wins, dropping the other
 			// id. Tracking issue: https://github.com/WordPress/gutenberg/issues/74751.
 			if ( ! parent && savedRecord?.id ) {
-				const clientId = getSelectedBlockClientId();
+				// Callers may pass an explicit blockClientId snapshot so the
+				// note attaches to the originating block even if the canvas
+				// selection has shifted while the form was open.
+				const clientId = blockClientId ?? getSelectedBlockClientId();
 				if ( ! clientId ) {
 					return savedRecord;
 				}
