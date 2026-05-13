@@ -46,7 +46,7 @@
 	"dependencies": {
 		"@wordpress/element": "file:../element",
 		"@wordpress/primitives": "file:../primitives",
-		"change-case": "4.1.2"
+		"change-case": "^4.1.2"
 	},
 	"peerDependencies": {
 		"react": "^18.0.0"

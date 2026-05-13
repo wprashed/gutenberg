@@ -61,7 +61,7 @@
 		"@wordpress/icons": "file:../icons",
 		"@wordpress/primitives": "file:../primitives",
 		"@wordpress/url": "file:../url",
-		"clsx": "2.1.1"
+		"clsx": "^2.1.1"
 	},
 	"devDependencies": {
 		"@testing-library/jest-dom": "^6.9.1",
