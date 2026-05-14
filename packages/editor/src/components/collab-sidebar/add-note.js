@@ -100,6 +100,14 @@ function AddNoteInner( { initialClientId, onSubmit, sidebarRef, floating } ) {
 				if ( event.currentTarget.contains( event.relatedTarget ) ) {
 					return;
 				}
+				// Format-type popovers (e.g., the inline link UI opened with
+				// Cmd+K) portal out of the form container, so the related
+				// target sits in `.components-popover` rather than inside
+				// `currentTarget`. Keep the form open while one of these is
+				// active so the user can finish editing the popover.
+				if ( event.relatedTarget.closest( '.components-popover' ) ) {
+					return;
+				}
 				toggleBlockSpotlight( clientId, false );
 				selectNote( undefined );
 			} }

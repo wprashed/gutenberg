@@ -75,6 +75,97 @@ test.describe( 'Block Notes', () => {
 		await expect( thread ).toBeFocused();
 	} );
 
+	test.describe( 'Rich text formatting in the note form', () => {
+		test( 'Cmd+B toggles bold in the new note textbox', async ( {
+			editor,
+			page,
+			pageUtils,
+		} ) => {
+			await editor.insertBlock( {
+				name: 'core/paragraph',
+				attributes: { content: 'Note rich text host' },
+			} );
+			await editor.clickBlockOptionsMenuItem( 'Add note' );
+			const textbox = page.getByRole( 'textbox', {
+				name: 'New note',
+				exact: true,
+			} );
+			await textbox.click();
+			await page.keyboard.type( 'hello world' );
+			// Select "hello" and toggle bold.
+			await pageUtils.pressKeys( 'primary+a' );
+			await pageUtils.pressKeys( 'primary+b' );
+			await expect(
+				textbox.locator( 'strong' ),
+				'Selection should be wrapped in <strong> after primary+b'
+			).toHaveText( 'hello world' );
+		} );
+
+		test( 'Cmd+K opens the inline link popover for the selected text', async ( {
+			editor,
+			page,
+			pageUtils,
+		} ) => {
+			await editor.insertBlock( {
+				name: 'core/paragraph',
+				attributes: { content: 'Note rich text host' },
+			} );
+			await editor.clickBlockOptionsMenuItem( 'Add note' );
+			const textbox = page.getByRole( 'textbox', {
+				name: 'New note',
+				exact: true,
+			} );
+			await textbox.click();
+			await page.keyboard.type( 'visit example' );
+			// Select all text in the note form.
+			await pageUtils.pressKeys( 'primary+a' );
+
+			// Cmd+K should open the inline link UI rather than the
+			// WordPress command palette. The command palette has the
+			// "Command palette" accessible name; the inline link UI
+			// surfaces a search textbox labeled "Link".
+			await pageUtils.pressKeys( 'primary+k' );
+			await expect(
+				page.getByRole( 'combobox', {
+					name: 'Link',
+				} ),
+				'Inline link search input should be visible'
+			).toBeVisible();
+			await expect(
+				page.getByRole( 'dialog', { name: 'Command palette' } ),
+				'Command palette should not have opened'
+			).toBeHidden();
+
+			// Pressing Escape closes the link popover and leaves the note
+			// form intact — focus does not get yanked out of the editor.
+			await page.keyboard.press( 'Escape' );
+			await expect(
+				page.getByRole( 'combobox', { name: 'Link' } )
+			).toBeHidden();
+			await expect( textbox ).toBeVisible();
+		} );
+
+		test( 'backtick wrapping applies core/code inline format', async ( {
+			editor,
+			page,
+		} ) => {
+			await editor.insertBlock( {
+				name: 'core/paragraph',
+				attributes: { content: 'Note rich text host' },
+			} );
+			await editor.clickBlockOptionsMenuItem( 'Add note' );
+			const textbox = page.getByRole( 'textbox', {
+				name: 'New note',
+				exact: true,
+			} );
+			await textbox.click();
+			// Typing `code` (backtick-wrapped) should auto-apply
+			// `core/code`'s inline format via its `__unstableInputRule`.
+			await page.keyboard.type( '`code` after' );
+			await expect( textbox.locator( 'code' ) ).toHaveText( 'code' );
+		} );
+	} );
+
 	test( 'can reply to a block note', async ( { page, blockNoteUtils } ) => {
 		await blockNoteUtils.addBlockWithNote( {
 			type: 'core/paragraph',
