@@ -187,7 +187,10 @@ export function useNoteActions() {
 			if ( ! parent && savedRecord?.id ) {
 				// Callers may pass an explicit blockClientId snapshot so the
 				// note attaches to the originating block even if the canvas
-				// selection has shifted while the form was open.
+				// selection has shifted while the form was open. Once the
+				// upstream RichTextControl stops moving block-editor selection
+				// on focus (see https://github.com/WordPress/gutenberg/pull/75275),
+				// this parameter and the matching snapshot in AddNote can go.
 				const clientId = blockClientId ?? getSelectedBlockClientId();
 				if ( ! clientId ) {
 					return savedRecord;
