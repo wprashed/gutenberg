@@ -54,17 +54,12 @@ if ( ! function_exists( 'gutenberg_note_content_pre_filter' ) ) {
 		$unslashed = wp_unslash( $content );
 		$filtered  = wp_kses( $unslashed, gutenberg_get_note_allowed_html() );
 
-		// Normalise link rels for safety.
-		$filtered = preg_replace_callback(
-			'#<a\b([^>]*)>#i',
-			static function ( $matches ) {
-				$attrs = $matches[1];
-				// Strip any existing rel attribute.
-				$attrs = preg_replace( '#\s+rel\s*=\s*("[^"]*"|\'[^\']*\'|\S+)#i', '', $attrs );
-				return '<a' . $attrs . ' rel="noopener nofollow">';
-			},
-			$filtered
-		);
+		// Normalize link rels via the HTML API.
+		$processor = new WP_HTML_Tag_Processor( $filtered );
+		while ( $processor->next_tag( 'A' ) ) {
+			$processor->set_attribute( 'rel', 'noopener nofollow' );
+		}
+		$filtered = $processor->get_updated_html();
 
 		return addslashes( $filtered );
 	}
