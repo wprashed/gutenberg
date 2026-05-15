@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { useEffect, useMemo } from '@wordpress/element';
+import { useEffect, useMemo, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { Stack } from '@wordpress/ui';
@@ -15,7 +15,7 @@ import {
  */
 import { unlock } from '../../lock-unlock';
 import { NoteThread } from './note-thread';
-import { focusNoteThread } from './utils';
+import { focusNoteThread, getNoteIdsFromMetadata } from './utils';
 import { useFloatingBoard, useNoteActions } from './hooks';
 import { AddNote } from './add-note';
 import { store as editorStore } from '../../store';
@@ -33,7 +33,7 @@ export function Notes( { notes, sidebarRef, isFloating = false, styles } ) {
 		useDispatch( blockEditorStore )
 	);
 
-	const { blockNoteId, selectedBlockClientId, orderedBlockIds } = useSelect(
+	const { noteId, selectedBlockClientId, orderedBlockIds } = useSelect(
 		( select ) => {
 			const {
 				getBlockAttributes,
@@ -42,7 +42,7 @@ export function Notes( { notes, sidebarRef, isFloating = false, styles } ) {
 			} = select( blockEditorStore );
 			const clientId = getSelectedBlockClientId();
 			return {
-				blockNoteId: clientId
+				noteId: clientId
 					? getBlockAttributes( clientId )?.metadata?.noteId
 					: null,
 				selectedBlockClientId: clientId,
@@ -50,6 +50,10 @@ export function Notes( { notes, sidebarRef, isFloating = false, styles } ) {
 			};
 		},
 		[]
+	);
+	const blockNoteIds = useMemo(
+		() => getNoteIdsFromMetadata( { noteId } ),
+		[ noteId ]
 	);
 	const { selectedNote, noteFocused } = useSelect( ( select ) => {
 		const { getSelectedNote, isNoteFocused } = unlock(
@@ -77,15 +81,15 @@ export function Notes( { notes, sidebarRef, isFloating = false, styles } ) {
 		};
 		const out = [];
 		orderedBlockIds.forEach( ( blockId ) => {
+			// Blocks can carry multiple notes — surface them all.
+			const threadsForBlock = notes.filter(
+				( t ) => t.blockClientId === blockId
+			);
+			out.push( ...threadsForBlock );
 			if ( blockId === selectedBlockClientId ) {
+				// Place the new note placeholder after the block's existing
+				// threads so the form appears alongside them.
 				out.push( newNoteThread );
-			} else {
-				const threadForBlock = notes.find(
-					( t ) => t.blockClientId === blockId
-				);
-				if ( threadForBlock ) {
-					out.push( threadForBlock );
-				}
 			}
 		} );
 		return out;
@@ -128,10 +132,43 @@ export function Notes( { notes, sidebarRef, isFloating = false, styles } ) {
 		}
 	};
 
-	// Auto-select the related note thread when a block is selected.
+	// Pick the most relevant thread for the selected block: first
+	// unresolved, else first matching. Derived outside the effect so the
+	// effect body stays minimal.
+	const targetNoteId = useMemo( () => {
+		if ( blockNoteIds.length === 0 ) {
+			return undefined;
+		}
+		const unresolved = notes.find(
+			( thread ) =>
+				blockNoteIds.includes( thread.id ) && thread.status === 'hold'
+		);
+		const first = notes.find( ( thread ) =>
+			blockNoteIds.includes( thread.id )
+		);
+		return unresolved?.id ?? first?.id;
+	}, [ blockNoteIds, notes ] );
+
+	// Auto-select the related note thread when the block context changes
+	// (block selection or note metadata). Read selectedNote via a ref so
+	// that an explicit user collapse — selectNote( undefined ) — doesn't
+	// retrigger the effect and immediately re-select the same thread.
+	const selectedNoteRef = useRef( selectedNote );
 	useEffect( () => {
-		selectNote( blockNoteId ?? undefined );
-	}, [ blockNoteId, selectNote ] );
+		selectedNoteRef.current = selectedNote;
+	}, [ selectedNote ] );
+	useEffect( () => {
+		const current = selectedNoteRef.current;
+		// Don't clobber an in-progress new note form.
+		if ( current === 'new' ) {
+			return;
+		}
+		// Preserve an explicit thread pick on the same block.
+		if ( typeof current === 'number' && blockNoteIds.includes( current ) ) {
+			return;
+		}
+		selectNote( targetNoteId );
+	}, [ targetNoteId, blockNoteIds, selectNote ] );
 
 	// Focus the selected note when requested.
 	useEffect( () => {
