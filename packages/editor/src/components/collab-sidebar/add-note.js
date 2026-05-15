@@ -31,7 +31,7 @@ export function AddNote( { onSubmit, sidebarRef, floating } ) {
 		[]
 	);
 
-	if ( selectedNote !== 'new' || ! liveClientId ) {
+	if ( selectedNote !== 'new' ) {
 		return null;
 	}
 
@@ -48,14 +48,21 @@ export function AddNote( { onSubmit, sidebarRef, floating } ) {
 // Renders the "Add note" form, snapshotting the canvas block clientId on
 // mount. Focusing the rich-text input can shift the block-editor selection,
 // so without this snapshot the canvas selection can clear mid-edit and
-// unmount the form before the user submits. The parent component guards
-// against `initialClientId` being falsy, so the snapshot is always defined.
+// unmount the form before the user submits. The parent must only gate on
+// `selectedNote` (not live selection) so this component stays mounted while
+// focus moves into the form; the frozen snapshot below is the safety net.
 function AddNoteInner( { initialClientId, onSubmit, sidebarRef, floating } ) {
 	const [ clientId ] = useState( initialClientId );
 	const blockElement = useBlockElement( clientId );
+	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
 	const { toggleBlockSpotlight } = unlock( useDispatch( blockEditorStore ) );
+	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
 	const { selectNote } = unlock( useDispatch( editorStore ) );
 	const isSubmittingRef = useRef( false );
+
+	if ( ! clientId ) {
+		return null;
+	}
 
 	const unselectNote = () => {
 		selectNote( undefined );

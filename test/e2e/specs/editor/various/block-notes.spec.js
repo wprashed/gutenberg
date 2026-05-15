@@ -101,49 +101,53 @@ test.describe( 'Block Notes', () => {
 			).toHaveText( 'hello world' );
 		} );
 
-		test( 'Cmd+K opens the inline link popover for the selected text', async ( {
-			editor,
-			page,
-			pageUtils,
-		} ) => {
-			await editor.insertBlock( {
-				name: 'core/paragraph',
-				attributes: { content: 'Note rich text host' },
-			} );
-			await editor.clickBlockOptionsMenuItem( 'Add note' );
-			const textbox = page.getByRole( 'textbox', {
-				name: 'New note',
-				exact: true,
-			} );
-			await textbox.click();
-			await page.keyboard.type( 'visit example' );
-			// Select all text in the note form.
-			await pageUtils.pressKeys( 'primary+a' );
+		// Deferred: the inline link popover only renders inside a
+		// toolbar-less RichTextControl once the format-library link gate
+		// is relaxed. That change is intentionally being made in the
+		// upstream RichTextControl PR rather than here. Re-enable when
+		// https://github.com/WordPress/gutenberg/pull/75275 lands the fix.
+		test.fixme(
+			'Cmd+K opens the inline link popover for the selected text',
+			async ( { editor, page, pageUtils } ) => {
+				await editor.insertBlock( {
+					name: 'core/paragraph',
+					attributes: { content: 'Note rich text host' },
+				} );
+				await editor.clickBlockOptionsMenuItem( 'Add note' );
+				const textbox = page.getByRole( 'textbox', {
+					name: 'New note',
+					exact: true,
+				} );
+				await textbox.click();
+				await page.keyboard.type( 'visit example' );
+				// Select all text in the note form.
+				await pageUtils.pressKeys( 'primary+a' );
 
-			// Cmd+K should open the inline link UI rather than the
-			// WordPress command palette. The command palette has the
-			// "Command palette" accessible name; the inline link UI
-			// surfaces a search textbox labeled "Link".
-			await pageUtils.pressKeys( 'primary+k' );
-			await expect(
-				page.getByRole( 'combobox', {
-					name: 'Link',
-				} ),
-				'Inline link search input should be visible'
-			).toBeVisible();
-			await expect(
-				page.getByRole( 'dialog', { name: 'Command palette' } ),
-				'Command palette should not have opened'
-			).toBeHidden();
+				// Cmd+K should open the inline link UI rather than the
+				// WordPress command palette. The command palette has the
+				// "Command palette" accessible name; the inline link UI
+				// surfaces a search textbox labeled "Link".
+				await pageUtils.pressKeys( 'primary+k' );
+				await expect(
+					page.getByRole( 'combobox', {
+						name: 'Link',
+					} ),
+					'Inline link search input should be visible'
+				).toBeVisible();
+				await expect(
+					page.getByRole( 'dialog', { name: 'Command palette' } ),
+					'Command palette should not have opened'
+				).toBeHidden();
 
-			// Pressing Escape closes the link popover and leaves the note
-			// form intact — focus does not get yanked out of the editor.
-			await page.keyboard.press( 'Escape' );
-			await expect(
-				page.getByRole( 'combobox', { name: 'Link' } )
-			).toBeHidden();
-			await expect( textbox ).toBeVisible();
-		} );
+				// Pressing Escape closes the link popover and leaves the note
+				// form intact — focus does not get yanked out of the editor.
+				await page.keyboard.press( 'Escape' );
+				await expect(
+					page.getByRole( 'combobox', { name: 'Link' } )
+				).toBeHidden();
+				await expect( textbox ).toBeVisible();
+			}
+		);
 
 		test( 'backtick wrapping applies core/code inline format', async ( {
 			editor,
