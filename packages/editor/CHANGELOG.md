@@ -8,6 +8,16 @@
 -   Added a suggestion-overlay subsystem that powers the `suggest` intent. When active, an `editor.BlockEdit` filter diverts `setAttributes` into an in-memory overlay keyed by `clientId`; the block renders with the pending change merged on top of its real attributes, but the block-editor store stays at the baseline. A toolbar button on the selected block submits the overlay as a note comment with a `_wp_suggestion` meta payload (`schemaVersion`, `blockName`, `baseRevision`, `operations`) or discards it. Phase 2: capture only; Apply/Reject and diff rendering follow.
 -   REST: allow post editors to accept or reject suggestion notes on their posts without requiring the `moderate_comments` capability. Tightens the `comments` controller for `type=note` so non-author editors can only update the suggestion lifecycle (`status` and `_wp_suggestion_status`), and rejects suggestion payloads larger than 64 KB before they reach the database.
 
+### Bug Fixes
+
+-   `mediaFinalize` now returns the post-finalize attachment (transformed from the REST response), so the upload-media queue can refresh the in-flight attachment URL. Required for the front-end `srcset` to render on client-side-media uploads that exceeded the big-image threshold.
+
+## 14.46.0 (2026-05-14)
+
+### Internal
+
+-   Update `date-fns` dependency to `v4.1.0` ([#78057](https://github.com/WordPress/gutenberg/pull/78057)).
+
 ## 14.45.0 (2026-04-29)
 
 ## 14.44.0 (2026-04-15)
