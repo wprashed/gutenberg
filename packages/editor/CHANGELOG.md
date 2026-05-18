@@ -11,6 +11,16 @@
 -   Suggestions: introduce a per-attribute conflict check (`hasAttributeConflict`) and a `SuggestionSummary` renderer that replaces the post-`modified_gmt` staleness compare. Adds the `wp/suggestions` architecture doc and updates the `core/editor` data reference to cover the new selectors.
 -   Suggestions: surface Apply / Reject actions in the collaboration sidebar via a shared `useSuggestionDecision` hook. Note headers expose icon-only Apply / Reject buttons, the note body renders the suggestion summary plus the staleness confirmation dialog, and the e2e coverage for block notes and the intent switcher is extended to the new UI.
 
+### Bug Fixes
+
+-   `mediaFinalize` now returns the post-finalize attachment (transformed from the REST response), so the upload-media queue can refresh the in-flight attachment URL. Required for the front-end `srcset` to render on client-side-media uploads that exceeded the big-image threshold.
+
+## 14.46.0 (2026-05-14)
+
+### Internal
+
+-   Update `date-fns` dependency to `v4.1.0` ([#78057](https://github.com/WordPress/gutenberg/pull/78057)).
+
 ## 14.45.0 (2026-04-29)
 
 ## 14.44.0 (2026-04-15)
