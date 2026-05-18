@@ -90,61 +90,6 @@ export function getNoteExcerpt( text, excerptLength = 10 ) {
 	return isTrimmed ? trimmedExcerpt + '…' : trimmedExcerpt;
 }
 
-/*
- * Multi-noteId helpers
- *
- * Block notes were originally a single linkage: `metadata.noteId` was a
- * scalar comment id. PR #75147 widened that to an array so a block can
- * carry multiple coexisting notes (e.g. a resolved suggestion plus a
- * pending discussion thread). The helpers below normalize both shapes —
- * existing posts written before the migration still have scalar values —
- * so callers never have to branch on the storage format. Add new accessors
- * here rather than reading `metadata.noteId` directly, both to preserve
- * compatibility and to handle the string/numeric id mismatch that legacy
- * data sometimes contains.
- */
-
-/**
- * Normalizes noteId metadata to always return an array.
- * Handles both scalar (legacy) and array (new) noteId values.
- *
- * @param {Object} metadata Block metadata object
- * @return {number[]} Array of note IDs (may be empty)
- */
-export function getNoteIdsFromMetadata( metadata ) {
-	if ( ! metadata || metadata.noteId === null ) {
-		return [];
-	}
-	// New format: noteId is an array.
-	if ( Array.isArray( metadata.noteId ) ) {
-		return metadata.noteId.filter( Boolean );
-	}
-	// Legacy format: noteId is a scalar.
-	return metadata.noteId ? [ metadata.noteId ] : [];
-}
-
-/**
- * Adds a note ID to the metadata.
- * Converts scalar to array if needed, otherwise appends.
- *
- * @param {Object} metadata Existing block metadata
- * @param {number} noteId   Note ID to add
- * @return {Object} Updated metadata object
- */
-export function addNoteIdToMetadata( metadata, noteId ) {
-	const existingIds = getNoteIdsFromMetadata( metadata );
-	// Compare as strings so a string-typed legacy id (e.g. '5') and a numeric
-	// id (5) are treated as duplicates.
-	const noteIdKey = String( noteId );
-	if ( existingIds.some( ( id ) => String( id ) === noteIdKey ) ) {
-		return metadata;
-	}
-	return {
-		...metadata,
-		noteId: [ ...existingIds, noteId ],
-	};
-}
-
 /**
  * Removes a note ID from the metadata.
  *
@@ -348,4 +293,43 @@ export function scrollNoteThreadIntoView( noteId, container ) {
 	return findNoteThread( noteId, container ).then( ( element ) => {
 		element?.scrollIntoView( { block: 'nearest' } );
 	} );
+}
+
+/**
+ * Reads the note IDs from block metadata as a normalized array,
+ * preserving insertion order. Handles both scalar (legacy, possibly
+ * string-typed) and array (new) values.
+ *
+ * @param {Object} metadata Block metadata object
+ * @return {number[]} Array of note IDs (may be empty)
+ */
+export function getNoteIdsFromMetadata( metadata ) {
+	const noteId = metadata?.noteId;
+	const raw = Array.isArray( noteId ) ? noteId : [ noteId ];
+	const ids = new Set();
+	for ( const value of raw ) {
+		const id = Number( value );
+		if ( Number.isFinite( id ) && id > 0 ) {
+			ids.add( id );
+		}
+	}
+	return [ ...ids ];
+}
+
+/**
+ * Adds a note ID to the metadata.
+ * Converts scalar to array if needed, otherwise appends.
+ *
+ * @param {Object} metadata Existing block metadata
+ * @param {number} noteId   Note ID to add
+ * @return {Object} Updated metadata object
+ */
+export function addNoteIdToMetadata( metadata, noteId ) {
+	const ids = new Set( getNoteIdsFromMetadata( metadata ) );
+	const id = Number( noteId );
+	if ( ids.has( id ) ) {
+		return metadata;
+	}
+	ids.add( id );
+	return { ...metadata, noteId: [ ...ids ] };
 }

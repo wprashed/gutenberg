@@ -42,10 +42,8 @@ describe( 'getNoteIdsFromMetadata', () => {
 		expect( getNoteIdsFromMetadata( { noteId: 42 } ) ).toEqual( [ 42 ] );
 	} );
 
-	it( 'handles string noteId (legacy format)', () => {
-		expect( getNoteIdsFromMetadata( { noteId: '42' } ) ).toEqual( [
-			'42',
-		] );
+	it( 'normalizes a string noteId to a number (legacy format)', () => {
+		expect( getNoteIdsFromMetadata( { noteId: '42' } ) ).toEqual( [ 42 ] );
 	} );
 
 	it( 'returns array from array noteId', () => {
