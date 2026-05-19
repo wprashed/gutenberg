@@ -360,7 +360,7 @@ function CropperInner(
 	// largest inscribed rect of the new ratio.
 	const prevAspectRatioRef = useRef( aspectRatio );
 	useEffect( () => {
-	if ( prevAspectRatioRef.current === aspectRatio ) {
+		if ( prevAspectRatioRef.current === aspectRatio ) {
 			return;
 		}
 		prevAspectRatioRef.current = aspectRatio;
