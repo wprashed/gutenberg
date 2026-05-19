@@ -329,7 +329,7 @@ const blob = await canvasToBlob( finalCanvas, 'image/jpeg', 0.9 );
 
 Accepts any `CanvasImageSource`: `HTMLImageElement`, `HTMLCanvasElement`, `OffscreenCanvas`, `ImageBitmap`, `HTMLVideoElement`.
 
-### 8. State change notifications
+### 7. State change notifications
 
 The `Cropper` component provides two notification mechanisms:
 
@@ -355,7 +355,7 @@ The `Cropper` component provides two notification mechanisms:
 />
 ```
 
-### 9. Theming and styling
+### 8. Theming and styling
 
 The component uses BEM-style CSS classes that themes can override:
 

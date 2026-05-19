@@ -12,7 +12,7 @@ import {
 /**
  * WordPress dependencies
  */
-import { useEffect } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -21,6 +21,7 @@ import { Cropper } from '../cropper';
 import {
 	CropperProvider,
 	useCropper,
+	useCropperMeasurements,
 	useSetCropperPreviewRect,
 } from '../cropper-provider';
 import type { UseCropperStateReturn } from '../../hooks/use-cropper-state';
@@ -123,6 +124,30 @@ function CropperWithPreviewControls() {
 				controller={ controller }
 				showDimming={ false }
 			/>
+		</>
+	);
+}
+
+function CropperMeasurementLifecycle() {
+	const controller = useCropper();
+	const { elementSize } = useCropperMeasurements();
+	const [ isMounted, setIsMounted ] = useState( true );
+
+	return (
+		<>
+			<button type="button" onClick={ () => setIsMounted( false ) }>
+				Unmount cropper
+			</button>
+			<div data-testid="cropper-measurement-status">
+				{ elementSize.width > 0 ? 'ready' : 'unready' }
+			</div>
+			{ isMounted && (
+				<Cropper
+					src="test.jpg"
+					controller={ controller }
+					showDimming={ false }
+				/>
+			) }
 		</>
 	);
 }
@@ -256,6 +281,38 @@ describe( 'Cropper', () => {
 				screen.queryByTestId( PREVIEW_RECT_TEST_ID )
 			).not.toBeInTheDocument()
 		);
+	} );
+
+	it( 'clears provider measurements when the cropper unmounts', async () => {
+		render(
+			<CropperProvider
+				initialState={ {
+					image: {
+						src: 'test.jpg',
+						naturalWidth: 600,
+						naturalHeight: 400,
+					},
+				} }
+			>
+				<CropperMeasurementLifecycle />
+			</CropperProvider>
+		);
+
+		await waitFor( () => {
+			expect(
+				screen.getByTestId( 'cropper-measurement-status' )
+			).toHaveTextContent( 'ready' );
+		} );
+
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Unmount cropper' } )
+		);
+
+		await waitFor( () => {
+			expect(
+				screen.getByTestId( 'cropper-measurement-status' )
+			).toHaveTextContent( 'unready' );
+		} );
 	} );
 
 	it( 'describes and focuses the crop area when requested', () => {
