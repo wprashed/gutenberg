@@ -1,16 +1,17 @@
 import type { ComponentManifest } from 'storybook/internal/types';
 
 export interface ManifestComponent extends ComponentManifest {
-	reactDocgen?: {
+	reactComponentMeta?: {
 		description?: string;
 		displayName?: string;
+		exportName?: string;
 		props?: Record<
 			string,
 			{
 				required?: boolean;
-				tsType?: { name: string; raw?: string };
+				type?: { name: string; raw?: string };
 				description?: string;
-				defaultValue?: { value: string };
+				defaultValue?: { value: string } | null;
 			}
 		>;
 	};
