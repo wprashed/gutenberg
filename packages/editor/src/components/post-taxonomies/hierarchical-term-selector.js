@@ -48,6 +48,7 @@ const DEFAULT_QUERY = {
 };
 const MIN_TERMS_COUNT_FOR_FILTER = 8;
 const EMPTY_ARRAY = [];
+const SAVE_LOCK_KEY = 'editor.term.create';
 
 /**
  * Sort Terms by Selected.
@@ -218,7 +219,13 @@ export function HierarchicalTermSelector( { slug } ) {
 		[ slug ]
 	);
 
-	const { editPost } = useDispatch( editorStore );
+	const {
+		editPost,
+		lockPostSaving,
+		unlockPostSaving,
+		lockPostAutosaving,
+		unlockPostAutosaving,
+	} = useDispatch( editorStore );
 	const { saveEntityRecord } = useDispatch( coreStore );
 
 	const availableTermsTree = useMemo(
@@ -305,6 +312,8 @@ export function HierarchicalTermSelector( { slug } ) {
 			return;
 		}
 		setAdding( true );
+		lockPostSaving( SAVE_LOCK_KEY );
+		lockPostAutosaving( SAVE_LOCK_KEY );
 		let newTerm;
 		try {
 			newTerm = await addTerm( {
@@ -316,6 +325,9 @@ export function HierarchicalTermSelector( { slug } ) {
 				type: 'snackbar',
 			} );
 			return;
+		} finally {
+			unlockPostSaving( SAVE_LOCK_KEY );
+			unlockPostAutosaving( SAVE_LOCK_KEY );
 		}
 		const defaultName =
 			slug === 'category' ? __( 'Category' ) : __( 'Term' );

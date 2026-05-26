@@ -38,7 +38,6 @@ const DEFAULT_QUERY = {
 	_fields: 'id,name',
 	context: 'view',
 };
-
 const SAVE_LOCK_KEY = 'editor.term.create';
 
 const isSameTermName = ( termA, termB ) =>
