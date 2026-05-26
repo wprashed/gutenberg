@@ -21,6 +21,7 @@
 ### Internal
 
 -   Refactor color space registration to avoid module-level side effects ([#77653](https://github.com/WordPress/gutenberg/pull/77653)).
+-   `ThemeProvider`: skip rendering the per-instance `<style>` element (and the associated ramp computation) when the resolved settings match the prebuilt defaults.
 
 ## 0.13.0 (2026-05-14)
 

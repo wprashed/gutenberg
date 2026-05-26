@@ -190,7 +190,21 @@ export function useThemeProviderStyles( {
 		[ primary, bg, cursorControl ]
 	);
 
+	// When the resolved settings match the built-in defaults (i.e. no override
+	// is contributed by this provider or any ancestor provider, and no cursor
+	// is set), the prebuilt CSS at `:root` already provides all the necessary
+	// values. In that case we skip computing and emitting any inline CSS so
+	// that the `<style>` element in `ThemeProvider` short-circuits.
+	const resolvesToDefaults =
+		primary === DEFAULT_SEED_COLORS.primary &&
+		bg === DEFAULT_SEED_COLORS.bg &&
+		cursorControl === undefined;
+
 	const colorStyles = useMemo( () => {
+		if ( resolvesToDefaults ) {
+			return undefined;
+		}
+
 		// Determine which seeds are needed for generating ramps.
 		const seeds = {
 			...DEFAULT_SEED_COLORS,
@@ -216,17 +230,19 @@ export function useThemeProviderStyles( {
 			primary: seeds.primary,
 			computedColorRamps,
 		} );
-	}, [ primary, bg ] );
+	}, [ primary, bg, resolvesToDefaults ] );
 
-	const themeProviderStyles: CSSProperties = useMemo(
-		() => ( {
+	const themeProviderStyles: CSSProperties | undefined = useMemo( () => {
+		if ( resolvesToDefaults ) {
+			return undefined;
+		}
+		return {
 			...colorStyles,
 			...( cursorControl && {
 				'--wpds-cursor-control': cursorControl,
 			} ),
-		} ),
-		[ colorStyles, cursorControl ]
-	);
+		};
+	}, [ colorStyles, cursorControl, resolvesToDefaults ] );
 
 	return {
 		resolvedSettings,
