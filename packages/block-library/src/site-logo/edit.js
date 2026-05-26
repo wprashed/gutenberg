@@ -221,7 +221,6 @@ const SiteLogo = ( {
 	// Hide crop and dimensions editing in write mode
 	const shouldShowCropAndDimensions = ! isContentOnlyMode;
 
-
 	// Support the previous location for the Site Icon settings. To be removed
 	// when the required WP core version for Gutenberg is >= 6.5.0.
 	const shouldUseNewUrl = ! window?.__experimentalUseCustomizerSiteLogoUrl;

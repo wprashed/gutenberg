@@ -1131,8 +1131,11 @@ export default function Image( {
 							aspectRatio,
 							...( resizeDelta
 								? {
-										width: pixelSize.width + resizeDelta.width,
-										height: pixelSize.height + resizeDelta.height,
+										width:
+											pixelSize.width + resizeDelta.width,
+										height:
+											pixelSize.height +
+											resizeDelta.height,
 								  }
 								: ( () => {
 										const style = {};
