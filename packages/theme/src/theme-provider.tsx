@@ -68,15 +68,7 @@ export const ThemeProvider = ( {
 	}, [ isRoot, themeProviderStyles ] );
 
 	return (
-		<div
-			// Empty marker attribute used by a small number of external
-			// selectors (e.g. `packages/ui/src/drawer/style.module.css`) to
-			// detect a `ThemeProvider` wrapper. The previous per-instance id
-			// was only needed to scope the now-removed `<style>` element.
-			data-wpds-theme-provider-id=""
-			className={ styles.root }
-			style={ themeProviderStyles }
-		>
+		<div className={ styles.root } style={ themeProviderStyles }>
 			<ThemeContext.Provider value={ contextValue }>
 				{ children }
 			</ThemeContext.Provider>
