@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, build } from '@terrazzo/parser';
 import config from '../../terrazzo.config';
+import { formatLegacyWpComponentsOverridesAsCSS } from '../../src/legacy-overrides';
 
 const sources = await Promise.all(
 	config.tokens.map( async ( tokenUrl: URL ) => ( {
@@ -38,8 +39,22 @@ const { outputFiles } = await build( tokens, {
 
 const outDir = fileURLToPath( config.outDir );
 
+const legacyWpComponentsOverridesCSS = formatLegacyWpComponentsOverridesAsCSS();
+
 for ( const file of outputFiles ) {
 	const filePath = resolve( outDir, file.filename );
 	await mkdir( dirname( filePath ), { recursive: true } );
-	await writeFile( filePath, file.contents );
+
+	// For the public CSS entry point, append the static legacy
+	// `--wp-components-*` aliases at `:root`. These are pure `var(...)`
+	// references that used to be emitted by every `<ThemeProvider>` instance
+	// at runtime. Hoisting them to the prebuilt CSS removes per-instance
+	// duplication and makes the aliases available globally — including in
+	// portals — without requiring a provider in the cascade.
+	const contents =
+		file.filename === 'css/design-tokens.css'
+			? `${ file.contents }\n${ legacyWpComponentsOverridesCSS }`
+			: file.contents;
+
+	await writeFile( filePath, contents );
 }

@@ -26,62 +26,6 @@ type Entry = [ string, string ];
 const getCachedBgRamp = memoize( buildBgRamp, { maxSize: 10 } );
 const getCachedAccentRamp = memoize( buildAccentRamp, { maxSize: 10 } );
 
-const legacyWpComponentsOverridesCSS: Entry[] = [
-	[ '--wp-components-color-accent', 'var(--wp-admin-theme-color)' ],
-	[
-		'--wp-components-color-accent-darker-10',
-		'var(--wp-admin-theme-color-darker-10)',
-	],
-	[
-		'--wp-components-color-accent-darker-20',
-		'var(--wp-admin-theme-color-darker-20)',
-	],
-	[
-		'--wp-components-color-accent-inverted',
-		'var(--wpds-color-fg-interactive-brand-strong)',
-	],
-	[
-		'--wp-components-color-background',
-		'var(--wpds-color-bg-surface-neutral-strong)',
-	],
-	[
-		'--wp-components-color-foreground',
-		'var(--wpds-color-fg-content-neutral)',
-	],
-	[
-		'--wp-components-color-foreground-inverted',
-		'var(--wpds-color-bg-surface-neutral)',
-	],
-	[
-		'--wp-components-color-gray-100',
-		'var(--wpds-color-bg-surface-neutral)',
-	],
-	[
-		'--wp-components-color-gray-200',
-		'var(--wpds-color-stroke-surface-neutral)',
-	],
-	[
-		'--wp-components-color-gray-300',
-		'var(--wpds-color-stroke-surface-neutral)',
-	],
-	[
-		'--wp-components-color-gray-400',
-		'var(--wpds-color-stroke-interactive-neutral)',
-	],
-	[
-		'--wp-components-color-gray-600',
-		'var(--wpds-color-stroke-interactive-neutral)',
-	],
-	[
-		'--wp-components-color-gray-700',
-		'var(--wpds-color-fg-content-neutral-weak)',
-	],
-	[
-		'--wp-components-color-gray-800',
-		'var(--wpds-color-fg-content-neutral)',
-	],
-];
-
 function customRgbFormat( color: PlainColorObject ): string {
 	const rgb = to( color, sRGB );
 	return rgb.coords
@@ -142,18 +86,23 @@ function colorTokensCSS(
 
 function generateStyles( {
 	primary,
+	primaryIsDefault,
 	computedColorRamps,
 }: {
 	primary: string;
+	primaryIsDefault: boolean;
 	computedColorRamps: Map< string, RampResult >;
 } ): CSSProperties {
 	return Object.fromEntries(
 		[
-			// Semantic color tokens
+			// Semantic color tokens.
 			colorTokensCSS( computedColorRamps ),
-			// Legacy overrides
-			legacyWpAdminThemeOverridesCSS( primary ),
-			legacyWpComponentsOverridesCSS,
+			// Legacy `--wp-admin-theme-color*` overrides — only emitted when
+			// the resolved primary differs from the prebuilt default. WP Core
+			// already provides default values for these custom properties, and
+			// the static `--wp-components-*` aliases that depend on them are
+			// emitted at `:root` by the prebuilt design tokens CSS.
+			primaryIsDefault ? [] : legacyWpAdminThemeOverridesCSS( primary ),
 		].flat()
 	);
 }
@@ -195,13 +144,13 @@ export function useThemeProviderStyles( {
 	// is set), the prebuilt CSS at `:root` already provides all the necessary
 	// values. In that case we skip computing and emitting any inline CSS so
 	// that the `<style>` element in `ThemeProvider` short-circuits.
+	const primaryIsDefault = primary === DEFAULT_SEED_COLORS.primary;
+	const bgIsDefault = bg === DEFAULT_SEED_COLORS.bg;
 	const resolvesToDefaults =
-		primary === DEFAULT_SEED_COLORS.primary &&
-		bg === DEFAULT_SEED_COLORS.bg &&
-		cursorControl === undefined;
+		primaryIsDefault && bgIsDefault && cursorControl === undefined;
 
 	const colorStyles = useMemo( () => {
-		if ( resolvesToDefaults ) {
+		if ( primaryIsDefault && bgIsDefault ) {
 			return undefined;
 		}
 
@@ -228,9 +177,10 @@ export function useThemeProviderStyles( {
 
 		return generateStyles( {
 			primary: seeds.primary,
+			primaryIsDefault,
 			computedColorRamps,
 		} );
-	}, [ primary, bg, resolvesToDefaults ] );
+	}, [ primary, bg, primaryIsDefault, bgIsDefault ] );
 
 	const themeProviderStyles: CSSProperties | undefined = useMemo( () => {
 		if ( resolvesToDefaults ) {

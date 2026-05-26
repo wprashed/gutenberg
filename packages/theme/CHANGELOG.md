@@ -21,7 +21,7 @@
 ### Internal
 
 -   Refactor color space registration to avoid module-level side effects ([#77653](https://github.com/WordPress/gutenberg/pull/77653)).
--   `ThemeProvider`: skip rendering the per-instance `<style>` element (and the associated ramp computation) when the resolved settings match the prebuilt defaults.
+-   `ThemeProvider`: hoist the static `--wp-components-*` legacy aliases out of the per-instance `<style>` element and into the prebuilt `:root` CSS, and skip emitting the per-instance `<style>` (and the associated ramp computation) entirely when the resolved settings match the prebuilt defaults. `--wp-admin-theme-color*` overrides are now emitted only when the resolved `color.primary` differs from the prebuilt default, letting WP Core's admin colour scheme show through otherwise.
 
 ## 0.13.0 (2026-05-14)
 
