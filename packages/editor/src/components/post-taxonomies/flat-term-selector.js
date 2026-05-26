@@ -42,6 +42,8 @@ const DEFAULT_QUERY = {
 	context: 'view',
 };
 
+const SAVE_LOCK_KEY = 'editor.term.create';
+
 const isSameTermName = ( termA, termB ) =>
 	unescapeString( termA ).toLowerCase() ===
 	unescapeString( termB ).toLowerCase();
@@ -155,7 +157,13 @@ export function FlatTermSelector( { slug } ) {
 		);
 	}, [ searchResults ] );
 
-	const { editPost } = useDispatch( editorStore );
+	const {
+		editPost,
+		lockPostSaving,
+		unlockPostSaving,
+		lockPostAutosaving,
+		unlockPostAutosaving,
+	} = useDispatch( editorStore );
 	const { saveEntityRecord } = useDispatch( coreStore );
 	const { createErrorNotice } = useDispatch( noticesStore );
 
@@ -219,6 +227,9 @@ export function FlatTermSelector( { slug } ) {
 			return;
 		}
 
+		lockPostSaving( SAVE_LOCK_KEY );
+		lockPostAutosaving( SAVE_LOCK_KEY );
+
 		Promise.all(
 			newTermNames.map( ( termName ) =>
 				findOrCreateTerm( { name: termName } )
@@ -237,6 +248,10 @@ export function FlatTermSelector( { slug } ) {
 				// In case of a failure, try assigning available terms.
 				// This will invalidate the optimistic update.
 				onUpdateTerms( termNamesToIds( uniqueTerms, availableTerms ) );
+			} )
+			.finally( () => {
+				unlockPostSaving( SAVE_LOCK_KEY );
+				unlockPostAutosaving( SAVE_LOCK_KEY );
 			} );
 	}
 
