@@ -12,6 +12,7 @@ import memoize from 'memize';
 import { useMemo, useContext } from '@wordpress/element';
 import { ThemeContext } from './context';
 import colorTokens from './prebuilt/ts/color-tokens';
+import densityOverrides from './prebuilt/ts/density-overrides';
 import {
 	buildBgRamp,
 	buildAccentRamp,
@@ -161,9 +162,11 @@ function generateStyles( {
 export function useThemeProviderStyles( {
 	color = {},
 	cursor,
+	density,
 }: {
 	color?: ThemeProviderProps[ 'color' ];
 	cursor?: ThemeProviderProps[ 'cursor' ];
+	density?: ThemeProviderProps[ 'density' ];
 } = {} ) {
 	const { resolvedSettings: inheritedSettings } = useContext( ThemeContext );
 
@@ -218,14 +221,22 @@ export function useThemeProviderStyles( {
 		} );
 	}, [ primary, bg ] );
 
+	const densityStyles: CSSProperties | undefined = useMemo( () => {
+		if ( ! density ) {
+			return undefined;
+		}
+		return densityOverrides[ density ];
+	}, [ density ] );
+
 	const themeProviderStyles: CSSProperties = useMemo(
 		() => ( {
 			...colorStyles,
 			...( cursorControl && {
 				'--wpds-cursor-control': cursorControl,
 			} ),
+			...densityStyles,
 		} ),
-		[ colorStyles, cursorControl ]
+		[ colorStyles, cursorControl, densityStyles ]
 	);
 
 	return {

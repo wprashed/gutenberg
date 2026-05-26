@@ -1,38 +1,8 @@
-import type { CSSProperties } from 'react';
-import { useMemo, useId } from '@wordpress/element';
+import { useMemo, useLayoutEffect } from '@wordpress/element';
 import { ThemeContext } from './context';
 import { useThemeProviderStyles } from './use-theme-provider-styles';
 import { type ThemeProviderProps } from './types';
 import styles from './style.module.css';
-
-function cssObjectToText( values: CSSProperties ) {
-	return Object.entries( values )
-		.map( ( [ key, value ] ) => `${ key }: ${ value };` )
-		.join( '' );
-}
-
-function generateCSSSelector( {
-	instanceId,
-	isRoot,
-}: {
-	instanceId: string;
-	isRoot: boolean;
-} ) {
-	const rootSel = `[data-wpds-root-provider="true"]`;
-	const instanceIdSel = `[data-wpds-theme-provider-id="${ instanceId }"]`;
-
-	const selectors = [];
-
-	if ( isRoot ) {
-		selectors.push(
-			`:root:has(.${ styles.root }${ rootSel }${ instanceIdSel })`
-		);
-	}
-
-	selectors.push( `.${ styles.root }.${ styles.root }${ instanceIdSel }` );
-
-	return selectors.join( ',' );
-}
 
 export const ThemeProvider = ( {
 	children,
@@ -41,11 +11,10 @@ export const ThemeProvider = ( {
 	isRoot = false,
 	density,
 }: ThemeProviderProps ) => {
-	const instanceId = useId();
-
 	const { themeProviderStyles, resolvedSettings } = useThemeProviderStyles( {
 		color,
 		cursor,
+		density,
 	} );
 
 	const contextValue = useMemo(
@@ -55,26 +24,62 @@ export const ThemeProvider = ( {
 		[ resolvedSettings ]
 	);
 
+	// When this provider is the root, mirror its CSS custom properties onto
+	// `document.documentElement` so the values are also available to portals,
+	// the `html`/`body` background, and anything else that renders outside
+	// the wrapper. Previously this was done via a `:root:has(...)` rule
+	// inside a per-instance `<style>` element; using inline styles plus this
+	// effect avoids that extra DOM node and the doubled-class specificity
+	// hack it depended on.
+	useLayoutEffect( () => {
+		if ( ! isRoot || typeof document === 'undefined' ) {
+			return;
+		}
+		const root = document.documentElement;
+		const previous = new Map< string, string >();
+		const applied: string[] = [];
+
+		for ( const [ rawKey, rawValue ] of Object.entries(
+			themeProviderStyles
+		) ) {
+			if (
+				! rawKey.startsWith( '--' ) ||
+				rawValue === null ||
+				rawValue === undefined
+			) {
+				continue;
+			}
+			const value = String( rawValue );
+			previous.set( rawKey, root.style.getPropertyValue( rawKey ) );
+			root.style.setProperty( rawKey, value );
+			applied.push( rawKey );
+		}
+
+		return () => {
+			for ( const key of applied ) {
+				const prev = previous.get( key );
+				if ( prev ) {
+					root.style.setProperty( key, prev );
+				} else {
+					root.style.removeProperty( key );
+				}
+			}
+		};
+	}, [ isRoot, themeProviderStyles ] );
+
 	return (
-		<>
-			{ themeProviderStyles ? (
-				<style>
-					{ `${ generateCSSSelector( {
-						instanceId,
-						isRoot,
-					} ) } {${ cssObjectToText( themeProviderStyles ) }}` }
-				</style>
-			) : null }
-			<div
-				data-wpds-theme-provider-id={ instanceId }
-				data-wpds-root-provider={ isRoot }
-				data-wpds-density={ density }
-				className={ styles.root }
-			>
-				<ThemeContext.Provider value={ contextValue }>
-					{ children }
-				</ThemeContext.Provider>
-			</div>
-		</>
+		<div
+			// Empty marker attribute used by a small number of external
+			// selectors (e.g. `packages/ui/src/drawer/style.module.css`) to
+			// detect a `ThemeProvider` wrapper. The previous per-instance id
+			// was only needed to scope the now-removed `<style>` element.
+			data-wpds-theme-provider-id=""
+			className={ styles.root }
+			style={ themeProviderStyles }
+		>
+			<ThemeContext.Provider value={ contextValue }>
+				{ children }
+			</ThemeContext.Provider>
+		</div>
 	);
 };

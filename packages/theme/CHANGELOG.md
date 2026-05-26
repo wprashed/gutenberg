@@ -15,6 +15,7 @@
 ### Internal
 
 -   Refactor color space registration to avoid module-level side effects ([#77653](https://github.com/WordPress/gutenberg/pull/77653)).
+-   `ThemeProvider` now propagates `color`, `cursor`, and `density` through CSS custom properties set inline on the wrapper element, replacing the per-instance `<style>` tag and the `[data-wpds-density]` attribute selectors. For root providers, the same custom properties are mirrored onto `document.documentElement` via an effect, removing the `:root:has(...)` selector.
 
 ## 0.13.0 (2026-05-14)
 
