@@ -25,7 +25,9 @@ export const ThemeProvider = ( {
 
 	// Mirror the wrapper's custom properties onto `document.documentElement`
 	// so they reach portals and anything else rendered outside the wrapper
-	// (e.g. the `html`/`body` background).
+	// (e.g. the `html`/`body` background). Unlike the wrapper, `html` is a
+	// shared element, so we set/remove individual properties (preserving any
+	// prior value) instead of declaratively assigning a full style object.
 	useLayoutEffect( () => {
 		if ( ! isRoot || typeof document === 'undefined' ) {
 			return;
