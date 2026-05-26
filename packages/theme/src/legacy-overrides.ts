@@ -1,14 +1,7 @@
 /**
- * Static legacy CSS custom property aliases that map the (now-deprecated)
- * `--wp-components-*` token surface onto the new design system tokens, and
- * onto WP Core's `--wp-admin-theme-color*` family.
- *
- * These mappings contain only `var(...)` references — they do not depend on
- * any runtime theme settings — so they live in the prebuilt CSS at `:root`
- * instead of being re-emitted by every `<ThemeProvider>` instance.
- *
- * Both this module and the `bin/build-design-tokens` script consume this
- * constant so that there is a single source of truth.
+ * Static `--wp-components-*` → WPDS / `--wp-admin-theme-color` aliases.
+ * Pure `var(...)` references, so they live at `:root` in the prebuilt CSS
+ * rather than being re-emitted by every `<ThemeProvider>` instance.
  */
 export const LEGACY_WP_COMPONENTS_OVERRIDES: ReadonlyArray<
 	readonly [ string, string ]
@@ -68,22 +61,13 @@ export const LEGACY_WP_COMPONENTS_OVERRIDES: ReadonlyArray<
 	],
 ];
 
-/**
- * Format `LEGACY_WP_COMPONENTS_OVERRIDES` as a `:root { ... }` CSS rule, ready
- * to be appended to the prebuilt `design-tokens.css` file.
- */
 export function formatLegacyWpComponentsOverridesAsCSS(): string {
 	const body = LEGACY_WP_COMPONENTS_OVERRIDES.map(
 		( [ name, value ] ) => `\t${ name }: ${ value };`
 	).join( '\n' );
 
 	return [
-		'/* -------------------------------------------',
-		' * Legacy `--wp-components-*` aliases.',
-		' * Pure `var(...)` references — emitted at `:root` so that any DOM',
-		' * subtree (including portals) inherits them without depending on a',
-		' * `<ThemeProvider>` instance being present in the cascade.',
-		' * ------------------------------------------- */',
+		'/* Legacy `--wp-components-*` aliases (see `legacy-overrides.ts`). */',
 		':root {',
 		body,
 		'}',

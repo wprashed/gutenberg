@@ -45,12 +45,8 @@ for ( const file of outputFiles ) {
 	const filePath = resolve( outDir, file.filename );
 	await mkdir( dirname( filePath ), { recursive: true } );
 
-	// For the public CSS entry point, append the static legacy
-	// `--wp-components-*` aliases at `:root`. These are pure `var(...)`
-	// references that used to be emitted by every `<ThemeProvider>` instance
-	// at runtime. Hoisting them to the prebuilt CSS removes per-instance
-	// duplication and makes the aliases available globally — including in
-	// portals — without requiring a provider in the cascade.
+	// Append the static legacy `--wp-components-*` aliases to the public CSS
+	// entry point. See `src/legacy-overrides.ts` for the rationale.
 	const contents =
 		file.filename === 'css/design-tokens.css'
 			? `${ file.contents }\n${ legacyWpComponentsOverridesCSS }`

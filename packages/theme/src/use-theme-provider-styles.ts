@@ -95,13 +95,9 @@ function generateStyles( {
 } ): CSSProperties {
 	return Object.fromEntries(
 		[
-			// Semantic color tokens.
 			colorTokensCSS( computedColorRamps ),
-			// Legacy `--wp-admin-theme-color*` overrides — only emitted when
-			// the resolved primary differs from the prebuilt default. WP Core
-			// already provides default values for these custom properties, and
-			// the static `--wp-components-*` aliases that depend on them are
-			// emitted at `:root` by the prebuilt design tokens CSS.
+			// Only override `--wp-admin-theme-color*` when the primary differs
+			// from the WPDS default — WP Core provides defaults otherwise.
 			primaryIsDefault ? [] : legacyWpAdminThemeOverridesCSS( primary ),
 		].flat()
 	);
@@ -139,11 +135,9 @@ export function useThemeProviderStyles( {
 		[ primary, bg, cursorControl ]
 	);
 
-	// When the resolved settings match the built-in defaults (i.e. no override
-	// is contributed by this provider or any ancestor provider, and no cursor
-	// is set), the prebuilt CSS at `:root` already provides all the necessary
-	// values. In that case we skip computing and emitting any inline CSS so
-	// that the `<style>` element in `ThemeProvider` short-circuits.
+	// When everything resolves to the WPDS defaults, the prebuilt `:root` CSS
+	// already provides every variable, so we can skip the per-instance
+	// `<style>` (and the ramp computation that feeds it) entirely.
 	const primaryIsDefault = primary === DEFAULT_SEED_COLORS.primary;
 	const bgIsDefault = bg === DEFAULT_SEED_COLORS.bg;
 	const resolvesToDefaults =

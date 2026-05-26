@@ -316,12 +316,7 @@
 	}
 }
 
-/* -------------------------------------------
- * Legacy `--wp-components-*` aliases.
- * Pure `var(...)` references — emitted at `:root` so that any DOM
- * subtree (including portals) inherits them without depending on a
- * `<ThemeProvider>` instance being present in the cascade.
- * ------------------------------------------- */
+/* Legacy `--wp-components-*` aliases (see `legacy-overrides.ts`). */
 :root {
 	--wp-components-color-accent: var( --wp-admin-theme-color );
 	--wp-components-color-accent-darker-10: var(
