@@ -23,13 +23,9 @@ export const ThemeProvider = ( {
 		[ resolvedSettings ]
 	);
 
-	// When this provider is the root, mirror its CSS custom properties onto
-	// `document.documentElement` so the values are also available to portals,
-	// the `html`/`body` background, and anything else that renders outside
-	// the wrapper. Previously this was done via a `:root:has(...)` rule
-	// inside a per-instance `<style>` element; using inline styles plus this
-	// effect avoids that extra DOM node and the doubled-class specificity
-	// hack it depended on.
+	// Mirror the wrapper's custom properties onto `document.documentElement`
+	// so they reach portals and anything else rendered outside the wrapper
+	// (e.g. the `html`/`body` background).
 	useLayoutEffect( () => {
 		if ( ! isRoot || typeof document === 'undefined' ) {
 			return;

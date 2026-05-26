@@ -319,10 +319,8 @@ function IframeWithClonedTokenStyles( {
 			document.head.querySelectorAll( 'style, link[rel="stylesheet"]' )
 		);
 
-		// The prebuilt design-tokens stylesheet defines every `--wpds-*`
-		// custom property, so detecting that prefix is a reliable way to
-		// identify the stylesheets the iframe needs in order to render the
-		// design system tokens.
+		// The design-tokens stylesheet is the only one that mentions
+		// `--wpds-` custom properties, so we use that as a marker.
 		const TOKEN_STYLESHEET_MARKER = '--wpds-';
 
 		allStyles.forEach( ( node ) => {
