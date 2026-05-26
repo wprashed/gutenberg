@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Enhancements
+
+-   Update `use-recommended-components` rule to prefer `Tooltip` from `@wordpress/ui` over `@wordpress/components` ([#78693](https://github.com/WordPress/gutenberg/pull/78693)).
+
 ## 25.2.0 (2026-05-14)
 
 ### New Features

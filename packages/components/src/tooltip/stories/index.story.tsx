@@ -38,8 +38,9 @@ const meta: Meta< typeof Tooltip > = {
 		controls: { expanded: true },
 		docs: { canvas: { sourceState: 'shown' } },
 		componentStatus: {
-			status: 'recommended',
+			status: 'not-recommended',
 			whereUsed: 'global',
+			notes: 'Use `Tooltip` from `@wordpress/ui` instead.',
 		},
 	},
 };

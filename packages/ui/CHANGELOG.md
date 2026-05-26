@@ -14,6 +14,7 @@
 
 ### Enhancements
 
+-   `Tooltip`: Mark as recommended for use in a WordPress environment now that all in-repo consumers have been migrated off the legacy `Tooltip` from `@wordpress/components` ([#78693](https://github.com/WordPress/gutenberg/pull/78693)).
 -   Export `getWpCompatOverlaySlot()` so consumers can route their own portals into the compat overlay slot ([#78183](https://github.com/WordPress/gutenberg/pull/78183)).
 -   `Select`, `SelectControl`: Default the popup's portal container to the `@wordpress/ui` compat overlay slot when present, so select popups stack reliably above other overlays in mixed-library compositions. A caller-supplied `Select.Portal` `container` prop continues to take precedence ([#78372](https://github.com/WordPress/gutenberg/pull/78372)).
 -   `Autocomplete`: Default the popup's portal container to the `@wordpress/ui` compat overlay slot when present, so autocomplete popups stack reliably above other overlays in mixed-library compositions. A caller-supplied `Autocomplete.Portal` `container` prop continues to take precedence ([#78375](https://github.com/WordPress/gutenberg/pull/78375)).
