@@ -14,7 +14,6 @@ export const ThemeProvider = ( {
 	const { themeProviderStyles, resolvedSettings } = useThemeProviderStyles( {
 		color,
 		cursor,
-		density,
 	} );
 
 	const contextValue = useMemo(
@@ -68,7 +67,11 @@ export const ThemeProvider = ( {
 	}, [ isRoot, themeProviderStyles ] );
 
 	return (
-		<div className={ styles.root } style={ themeProviderStyles }>
+		<div
+			data-wpds-density={ density }
+			className={ styles.root }
+			style={ themeProviderStyles }
+		>
 			<ThemeContext.Provider value={ contextValue }>
 				{ children }
 			</ThemeContext.Provider>

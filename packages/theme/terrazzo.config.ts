@@ -5,7 +5,6 @@ import pluginModeOverrides from './bin/terrazzo-plugin-mode-overrides/index';
 import pluginKnownWpdsCssVariables from './bin/terrazzo-plugin-known-wpds-css-variables/index';
 import pluginDsTokenDocs from './bin/terrazzo-plugin-ds-tokens-docs/index';
 import pluginDsTokenFallbacks from './bin/terrazzo-plugin-ds-token-fallbacks/index';
-import pluginDensityOverrides from './bin/terrazzo-plugin-density-overrides/index';
 import inlineAliasValues from './bin/terrazzo-plugin-inline-alias-values/index';
 import typescriptTypes from './bin/terrazzo-plugin-typescript-types/index';
 
@@ -64,14 +63,21 @@ const config: Config = {
 			},
 			baseSelector: ':root',
 			modeSelectors: [
-				// Density-specific dimension overrides used to be emitted as
-				// `[data-wpds-density='…']` attribute selectors here. They are
-				// now propagated through `ThemeProvider` as inline custom
-				// properties on the wrapper element so that `density` shares
-				// the same propagation model as `color` and `cursor` (see
-				// issue #77462, items A8 and I2). The values themselves are
-				// generated as a runtime-readable TypeScript module by the
-				// `terrazzo-plugin-density-overrides` plugin below.
+				{
+					tokens: [ 'wpds-dimension.**' ],
+					mode: 'compact',
+					selectors: [ "[data-wpds-density='compact']" ],
+				},
+				{
+					tokens: [ 'wpds-dimension.**' ],
+					mode: 'comfortable',
+					selectors: [ "[data-wpds-density='comfortable']" ],
+				},
+				{
+					tokens: [ 'wpds-dimension.**' ],
+					mode: '.',
+					selectors: [ "[data-wpds-density='default']" ],
+				},
 				{
 					mode: 'high-dpi',
 					selectors: [
@@ -80,15 +86,6 @@ const config: Config = {
 				},
 			],
 			legacyHex: true,
-		} ),
-		pluginDensityOverrides( {
-			filename: 'ts/density-overrides.ts',
-			tokenFilter: 'wpds-dimension.**',
-			modes: [
-				{ terrazzoMode: '.', runtimeKey: 'default' },
-				{ terrazzoMode: 'compact', runtimeKey: 'compact' },
-				{ terrazzoMode: 'comfortable', runtimeKey: 'comfortable' },
-			],
 		} ),
 		pluginKnownWpdsCssVariables( {
 			filename: 'js/design-tokens.mjs',
