@@ -15,7 +15,7 @@
 ### Internal
 
 -   Refactor color space registration to avoid module-level side effects ([#77653](https://github.com/WordPress/gutenberg/pull/77653)).
--   `ThemeProvider` now applies its `color` and `cursor` settings as inline CSS custom properties on the wrapper element. For root providers, the same properties are mirrored onto `document.documentElement` via an effect.
+-   `ThemeProvider`: apply `color` and `cursor` settings via inline styles instead of a per-instance `<style>` element ([#78678](https://github.com/WordPress/gutenberg/pull/78678)).
 
 ## 0.13.0 (2026-05-14)
 
