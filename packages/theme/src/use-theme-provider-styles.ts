@@ -140,9 +140,10 @@ export function useThemeProviderStyles( {
 	);
 
 	// When everything resolves to the WPDS defaults, the prebuilt `:root` CSS
-	// already provides every variable, so skip the per-instance `<style>`.
-	// `colorjs.io`'s `equals` treats any parseable representation of the
-	// same color as default (e.g. `#3858E9` ≡ `#3858e9` ≡ `rgb(56 88 233)`).
+	// already provides every variable; return `undefined` so the provider
+	// applies no per-instance overrides. `colorjs.io`'s `equals` treats any
+	// parseable representation of the same color as default (e.g. `#3858E9`
+	// ≡ `#3858e9` ≡ `rgb(56 88 233)`).
 	let primaryIsDefault = false;
 	let bgIsDefault = false;
 	try {

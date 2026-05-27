@@ -12,7 +12,7 @@
 
 ### Internal
 
--   `ThemeProvider`: skip emitting the per-instance `<style>` element entirely when the resolved settings match the prebuilt defaults. `--wp-admin-theme-color*` overrides are now emitted only when the resolved `color.primary` differs from the prebuilt default, letting WP Core's admin color scheme show through otherwise ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
+-   `ThemeProvider`: skip applying per-instance overrides entirely when the resolved settings match the prebuilt defaults. `--wp-admin-theme-color*` overrides are now applied only when the resolved `color.primary` differs from the prebuilt default, letting WP Core's admin color scheme show through otherwise ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
 -   Within the block editor iframe, default WPDS tokens (`--wpds-*`) are now available at `:root` even without a `<ThemeProvider>` instance, matching the main admin document ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
 
 ## 0.14.0 (2026-05-27)

@@ -290,39 +290,24 @@ function IframeWithClonedTokenStyles( {
 	const [ iframeLoaded, setIframeLoaded ] = useState( false );
 
 	// Make DS tokens available inside the iframe. In real WordPress this is
-	// handled by enqueuing the prebuilt token stylesheet and routing per-
-	// instance overrides through `StyleProvider`; Storybook has no enqueue
-	// layer, so we replicate it by cloning the prebuilt token stylesheet
-	// plus any `<style>` emitted by a nested `<ThemeProvider>`.
+	// handled by enqueuing the prebuilt token stylesheet; Storybook has no
+	// enqueue layer, so we clone its `<link>` into the iframe here. Any
+	// per-instance overrides travel into the iframe with the portalled
+	// `<ThemeProvider>` itself.
 	useEffect( () => {
 		const iframe = iframeRef.current;
 		if ( ! iframe || ! iframe.contentDocument ) {
 			return;
 		}
 
-		const head = iframe.contentDocument.head;
-
-		const allNodes = Array.from(
-			document.head.querySelectorAll( 'style, link[rel="stylesheet"]' )
+		const tokensLink = document.head.querySelector(
+			'link[rel="stylesheet"][href*="design-tokens"]'
 		);
-
-		allNodes.forEach( ( node ) => {
-			if ( node.tagName === 'STYLE' ) {
-				// Per-instance overrides carry this data attribute.
-				if (
-					( node as HTMLStyleElement ).dataset.wpdsThemeProviderId !==
-					undefined
-				) {
-					head.appendChild( node.cloneNode( true ) );
-				}
-			} else if (
-				node.tagName === 'LINK' &&
-				( node as HTMLLinkElement ).href.includes( 'design-tokens' )
-			) {
-				// Prebuilt token stylesheet.
-				head.appendChild( node.cloneNode( true ) );
-			}
-		} );
+		if ( tokensLink ) {
+			iframe.contentDocument.head.appendChild(
+				tokensLink.cloneNode( true )
+			);
+		}
 
 		setIframeLoaded( true );
 	}, [] );
