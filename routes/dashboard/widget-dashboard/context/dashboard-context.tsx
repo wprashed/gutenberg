@@ -25,6 +25,7 @@ import type {
 	WidgetGridSettings,
 	DashboardWidget,
 } from '../types';
+import { WIDGET_DASHBOARD_COLUMN_COUNT } from '../types';
 import type { ResolveWidgetModule, WidgetType } from '../../widget-primitives';
 
 /*
@@ -39,7 +40,7 @@ import type { ResolveWidgetModule, WidgetType } from '../../widget-primitives';
  */
 const DEFAULT_GRID: WidgetGridSettings = {
 	model: 'grid',
-	columns: 12,
+	columns: WIDGET_DASHBOARD_COLUMN_COUNT,
 	minColumnWidth: 140,
 	rowHeight: 140,
 };
@@ -51,7 +52,7 @@ function resolveGridSettings(
 ): GridSettingsWithColumns {
 	return {
 		...settings,
-		columns: settings.columns ?? DEFAULT_GRID.columns!,
+		columns: WIDGET_DASHBOARD_COLUMN_COUNT,
 	};
 }
 
