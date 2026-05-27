@@ -77,9 +77,6 @@ describe( 'useThemeProviderStyles', () => {
 
 	describe( 'when seeds are unparseable', () => {
 		it( 'does not silently treat an unparseable `color.primary` as default', () => {
-			// The `equals` call inside the hook is wrapped in `try/catch`,
-			// so this throw must come from the downstream emission path
-			// (matching #77653's behavior).
 			expect( () =>
 				renderHook( () =>
 					useThemeProviderStyles( {
