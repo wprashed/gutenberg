@@ -6,6 +6,15 @@
 
 -   Drop the experimental `density` support from `ThemeProvider`. The `density` prop has been removed, along with the related `data-wpds-density` attribute and the per-density overrides on `--wpds-dimension-padding-*` / `--wpds-dimension-gap-*` tokens ([#78741](https://github.com/WordPress/gutenberg/pull/78741)).
 
+### Documentation
+
+-   Document the static-stylesheet + `<ThemeProvider>` delivery model, the `isRoot` prop, and the canonical pattern for using `<ThemeProvider>` across documents (iframes and other portals) ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
+
+### Internal
+
+-   `ThemeProvider`: skip emitting the per-instance `<style>` element entirely when the resolved settings match the prebuilt defaults. `--wp-admin-theme-color*` overrides are now emitted only when the resolved `color.primary` differs from the prebuilt default, letting WP Core's admin color scheme show through otherwise ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
+-   Within the block editor iframe, default WPDS tokens (`--wpds-*`) are now available at `:root` even without a `<ThemeProvider>` instance, matching the main admin document ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
+
 ## 0.14.0 (2026-05-27)
 
 ### Breaking Changes
@@ -17,14 +26,10 @@
 
 -   Add ["Design System/Tokens/Introduction" page](https://wordpress.github.io/gutenberg/?path=/docs/design-system-tokens-introduction--docs) to Storybook ([#78449](https://github.com/WordPress/gutenberg/pull/78449)).
 -   Add "How to pick a token" and "Naming pattern" guidance to [the design system tokens reference documentation](https://github.com/WordPress/gutenberg/blob/trunk/packages/theme/docs/tokens.md) ([#78438](https://github.com/WordPress/gutenberg/pull/78438)).
--   Document the static-stylesheet + `<ThemeProvider>` delivery model, the `isRoot` prop, and the canonical pattern for using `<ThemeProvider>` across documents (iframes and other portals) ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
 
 ### Internal
 
 -   Refactor color space registration to avoid module-level side effects ([#77653](https://github.com/WordPress/gutenberg/pull/77653)).
--   `ThemeProvider`: hoist the static `--wp-components-*` legacy aliases out of the per-instance `<style>` element and into the prebuilt `:root` CSS, and skip emitting the per-instance `<style>` (and the associated ramp computation) entirely when the resolved settings match the prebuilt defaults. `--wp-admin-theme-color*` overrides are now emitted only when the resolved `color.primary` differs from the prebuilt default, letting WP Core's admin colour scheme show through otherwise ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
--   `ThemeProvider`: compare resolved seed colours against the design system defaults with `colorjs.io`'s `equals`, so any parseable representation of the same colour (e.g. uppercase hex, `rgb(...)`, alternate spaces) is treated as default and triggers the `<style>`-skip optimisation ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
--   Add `packages/theme/src/design-tokens.scss` so the `wp-build` style pipeline emits `build/styles/theme/design-tokens.css`. The companion `wp-design-tokens` PHP handle (registered in `lib/client-assets.php`) makes the prebuilt token `:root` block available to the editor iframe alongside `wp-base-styles`, restoring access to `--wp-components-*` aliases for stylesheets rendered into the iframe head ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
 
 ## 0.13.0 (2026-05-14)
 

@@ -3,7 +3,6 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse, build } from '@terrazzo/parser';
 import config from '../../terrazzo.config';
-import { formatLegacyWpComponentsOverridesAsCSS } from '../../src/legacy-overrides';
 
 const sources = await Promise.all(
 	config.tokens.map( async ( tokenUrl: URL ) => ( {
@@ -39,18 +38,8 @@ const { outputFiles } = await build( tokens, {
 
 const outDir = fileURLToPath( config.outDir );
 
-const legacyWpComponentsOverridesCSS = formatLegacyWpComponentsOverridesAsCSS();
-
 for ( const file of outputFiles ) {
 	const filePath = resolve( outDir, file.filename );
 	await mkdir( dirname( filePath ), { recursive: true } );
-
-	// Append the static legacy `--wp-components-*` aliases to the public CSS
-	// entry point. See `src/legacy-overrides.ts` for the rationale.
-	const contents =
-		file.filename === 'css/design-tokens.css'
-			? `${ file.contents }\n${ legacyWpComponentsOverridesCSS }`
-			: file.contents;
-
-	await writeFile( filePath, contents );
+	await writeFile( filePath, file.contents );
 }

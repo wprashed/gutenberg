@@ -24,10 +24,6 @@ import type { ThemeProviderProps } from './types';
 
 type Entry = [ string, string ];
 
-// sRGB is the parse target for hex/`rgb(...)` inputs used throughout this file
-// (e.g. `equals( '#3858e9', '#3858E9' )` and `to( accent, HSL )`).
-ColorSpace.register( sRGB );
-
 const getCachedBgRamp = memoize( buildBgRamp, { maxSize: 10 } );
 const getCachedAccentRamp = memoize( buildAccentRamp, { maxSize: 10 } );
 
@@ -39,6 +35,10 @@ function customRgbFormat( color: PlainColorObject ): string {
 }
 
 function legacyWpAdminThemeOverridesCSS( accent: string ): Entry[] {
+	// Register sRGB so `to( accent, HSL )` can parse hex / `rgb(...)` inputs.
+	// `ColorSpace.register` is idempotent — see #77653 for why we keep this
+	// inline rather than at module scope.
+	ColorSpace.register( sRGB );
 	const parsedAccent = to( accent, HSL );
 	const parsedL = parsedAccent.coords[ 2 ] ?? 0;
 
@@ -141,14 +141,20 @@ export function useThemeProviderStyles( {
 
 	// When everything resolves to the WPDS defaults, the prebuilt `:root` CSS
 	// already provides every variable, so we can skip the per-instance
-	// `<style>` (and the ramp computation that feeds it) entirely. We compare
-	// with `colorjs.io`'s `equals` so any parseable representation of the same
-	// color counts as default (e.g. `#3858E9` ≡ `#3858e9` ≡ `rgb(56 88 233)`).
-	// Unparseable seeds fall through with the flags `false`, preserving the
-	// existing clear error from `legacyWpAdminThemeOverridesCSS` (see #77653).
+	// `<style>` entirely. Comparing via `colorjs.io`'s `equals` means any
+	// parseable representation of the same color counts as default (e.g.
+	// `#3858E9` ≡ `#3858e9` ≡ `rgb(56 88 233)`).
 	let primaryIsDefault = false;
 	let bgIsDefault = false;
 	try {
+		// Register sRGB so `equals` can parse hex / `rgb(...)` inputs.
+		// `ColorSpace.register` is idempotent (#77653).
+		ColorSpace.register( sRGB );
+		// `equals` throws on unparseable inputs (e.g. a consumer passes
+		// `color.primary="not-a-color"`). We swallow that here so the
+		// emission path still runs — the downstream `to( accent, HSL )` call
+		// in `legacyWpAdminThemeOverridesCSS` is what surfaces a clear error
+		// in that case (see #77653).
 		primaryIsDefault = equals( primary, DEFAULT_SEED_COLORS.primary );
 		bgIsDefault = equals( bg, DEFAULT_SEED_COLORS.bg );
 	} catch {}

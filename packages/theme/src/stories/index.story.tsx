@@ -289,10 +289,16 @@ function IframeWithClonedTokenStyles( {
 	const iframeRef = useRef< HTMLIFrameElement >( null );
 	const [ iframeLoaded, setIframeLoaded ] = useState( false );
 
-	// Copy the stylesheet where the DS tokens are defined to the iframe.
-	// While this technique is a bit hacky, it works well enough for the purpose
-	// of this demo.
-	// Consumers of the DS could instead reference the stylesheet directly.
+	// Copy the stylesheets that define DS tokens into the iframe head.
+	//
+	// In WordPress, the editor iframe gets the prebuilt token block at `:root`
+	// automatically via the `wp-theme` PHP handle (registered in
+	// `lib/client-assets.php`) and any per-instance `<style>` overrides via
+	// `<StyleProvider document={ iframeDocument }>` from `@wordpress/components`.
+	// In Storybook there is no PHP layer, so we replicate that here by cloning
+	// the prebuilt token stylesheet plus any `<style>` element emitted by a
+	// nested `<ThemeProvider>` (identified by its `data-wpds-theme-provider-id`
+	// attribute).
 	useEffect( () => {
 		const iframe = iframeRef.current;
 		if ( ! iframe || ! iframe.contentDocument ) {
@@ -301,32 +307,28 @@ function IframeWithClonedTokenStyles( {
 
 		const head = iframe.contentDocument.head;
 
-		// Filter styles associated with a theme provider
-		const allStyles = Array.from(
+		const allNodes = Array.from(
 			document.head.querySelectorAll( 'style, link[rel="stylesheet"]' )
 		);
 
-		allStyles.forEach( ( node ) => {
+		allNodes.forEach( ( node ) => {
 			if ( node.tagName === 'STYLE' ) {
-				const text = node.textContent || '';
-				if ( text.includes( 'data-wpds-theme-provider-id' ) ) {
+				// Only `<ThemeProvider>` instances with non-default settings
+				// emit a `<style>` element, identifiable by this attribute.
+				if (
+					( node as HTMLStyleElement ).dataset.wpdsThemeProviderId !==
+					undefined
+				) {
 					head.appendChild( node.cloneNode( true ) );
 				}
 			} else if ( node.tagName === 'LINK' ) {
-				// Fetch and inspect the stylesheet content
+				// Clone the prebuilt token stylesheet (`design-tokens.css`)
+				// so the iframe has the `--wpds-*` `:root` block. Any other
+				// stylesheets are skipped to keep the iframe minimal.
 				const href = ( node as HTMLLinkElement ).href;
-				fetch( href )
-					.then( ( res ) => res.text() )
-					.then( ( css ) => {
-						if ( css.includes( 'data-wpds-theme-provider-id' ) ) {
-							const linkClone = node.cloneNode( true );
-							head.appendChild( linkClone );
-						}
-					} )
-					.catch( ( err ) => {
-						// eslint-disable-next-line no-console
-						console.warn( 'Failed to load stylesheet:', href, err );
-					} );
+				if ( href.includes( 'design-tokens' ) ) {
+					head.appendChild( node.cloneNode( true ) );
+				}
 			}
 		} );
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Internal
+
+-   Define the legacy `--wp-components-*` CSS custom property aliases (mapping to `--wp-admin-theme-color*` / `--wpds-*`) at `:root` in the package stylesheet. They previously shipped from `@wordpress/theme`'s `<ThemeProvider>`; consumers of the `wp-components` stylesheet now get them automatically ([#78664](https://github.com/WordPress/gutenberg/pull/78664)).
+
 ## 34.0.0 (2026-05-27)
 
 ### Breaking Changes
