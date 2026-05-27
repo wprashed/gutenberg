@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import {
 	ColorSpace,
 	clone,
+	equals,
 	set,
 	to,
 	sRGB,
@@ -23,6 +24,10 @@ import type { ThemeProviderProps } from './types';
 
 type Entry = [ string, string ];
 
+// sRGB is the parse target for hex/`rgb(...)` inputs used throughout this file
+// (e.g. `equals( '#3858e9', '#3858E9' )` and `to( accent, HSL )`).
+ColorSpace.register( sRGB );
+
 const getCachedBgRamp = memoize( buildBgRamp, { maxSize: 10 } );
 const getCachedAccentRamp = memoize( buildAccentRamp, { maxSize: 10 } );
 
@@ -34,7 +39,6 @@ function customRgbFormat( color: PlainColorObject ): string {
 }
 
 function legacyWpAdminThemeOverridesCSS( accent: string ): Entry[] {
-	ColorSpace.register( sRGB );
 	const parsedAccent = to( accent, HSL );
 	const parsedL = parsedAccent.coords[ 2 ] ?? 0;
 
@@ -137,9 +141,17 @@ export function useThemeProviderStyles( {
 
 	// When everything resolves to the WPDS defaults, the prebuilt `:root` CSS
 	// already provides every variable, so we can skip the per-instance
-	// `<style>` (and the ramp computation that feeds it) entirely.
-	const primaryIsDefault = primary === DEFAULT_SEED_COLORS.primary;
-	const bgIsDefault = bg === DEFAULT_SEED_COLORS.bg;
+	// `<style>` (and the ramp computation that feeds it) entirely. We compare
+	// with `colorjs.io`'s `equals` so any parseable representation of the same
+	// color counts as default (e.g. `#3858E9` ≡ `#3858e9` ≡ `rgb(56 88 233)`).
+	// Unparseable seeds fall through with the flags `false`, preserving the
+	// existing clear error from `legacyWpAdminThemeOverridesCSS` (see #77653).
+	let primaryIsDefault = false;
+	let bgIsDefault = false;
+	try {
+		primaryIsDefault = equals( primary, DEFAULT_SEED_COLORS.primary );
+		bgIsDefault = equals( bg, DEFAULT_SEED_COLORS.bg );
+	} catch {}
 	const resolvesToDefaults =
 		primaryIsDefault && bgIsDefault && cursorControl === undefined;
 

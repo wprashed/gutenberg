@@ -22,6 +22,8 @@
 
 -   Refactor color space registration to avoid module-level side effects ([#77653](https://github.com/WordPress/gutenberg/pull/77653)).
 -   `ThemeProvider`: hoist the static `--wp-components-*` legacy aliases out of the per-instance `<style>` element and into the prebuilt `:root` CSS, and skip emitting the per-instance `<style>` (and the associated ramp computation) entirely when the resolved settings match the prebuilt defaults. `--wp-admin-theme-color*` overrides are now emitted only when the resolved `color.primary` differs from the prebuilt default, letting WP Core's admin colour scheme show through otherwise.
+-   `ThemeProvider`: compare resolved seed colours against the design system defaults with `colorjs.io`'s `equals`, so any parseable representation of the same colour (e.g. uppercase hex, `rgb(...)`, alternate spaces) is treated as default and triggers the `<style>`-skip optimisation.
+-   Add `packages/theme/src/design-tokens.scss` so the `wp-build` style pipeline emits `build/styles/theme/design-tokens.css`. The companion `wp-design-tokens` PHP handle (registered in `lib/client-assets.php`) makes the prebuilt token `:root` block available to the editor iframe alongside `wp-base-styles`, restoring access to `--wp-components-*` aliases for stylesheets rendered into the iframe head.
 
 ## 0.13.0 (2026-05-14)
 

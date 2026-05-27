@@ -143,12 +143,27 @@ function gutenberg_register_packages_styles( $styles ) {
 	// wp-customize-widgets: add wp-edit-blocks (custom handle not auto-inferred)
 	$styles->query( 'wp-customize-widgets', 'registered' )->deps[] = 'wp-edit-blocks';
 
+	// Register wp-design-tokens (Design System CSS custom properties).
+	// Loaded ahead of wp-base-styles so the `:root` token block is available
+	// everywhere wp-base-styles is enqueued (including the editor iframe via
+	// $wp_edit_blocks_dependencies below).
+	gutenberg_override_style(
+		$styles,
+		'wp-design-tokens',
+		gutenberg_url( 'build/styles/theme/design-tokens' . $suffix . '.css' ),
+		array(),
+		$version
+	);
+	$styles->add_data( 'wp-design-tokens', 'rtl', 'replace' );
+	$styles->add_data( 'wp-design-tokens', 'suffix', $suffix );
+	$styles->add_data( 'wp-design-tokens', 'path', gutenberg_dir_path() . 'build/styles/theme/design-tokens' . $suffix . '.css' );
+
 	// Register wp-base-styles and add it to the already registered wp-admin stylesheet
 	gutenberg_override_style(
 		$styles,
 		'wp-base-styles',
 		gutenberg_url( 'build/styles/base-styles/admin-schemes' . $suffix . '.css' ),
-		array(),
+		array( 'wp-design-tokens' ),
 		$version
 	);
 	$styles->add_data( 'wp-base-styles', 'rtl', 'replace' );
@@ -180,6 +195,10 @@ function gutenberg_register_packages_styles( $styles ) {
 
 	// Only add CONTENT styles here that should be enqueued in the iframe!
 	$wp_edit_blocks_dependencies = array(
+		// Design System tokens must load first so the `:root` CSS custom
+		// properties are defined before any consuming stylesheet (or
+		// `<ThemeProvider>` overrides) reads them inside the editor iframe.
+		'wp-design-tokens',
 		'wp-components',
 		// This need to be added before the block library styles,
 		// The block library styles override the "reset" styles.
