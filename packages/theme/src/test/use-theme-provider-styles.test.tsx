@@ -13,11 +13,8 @@ describe( 'useThemeProviderStyles', () => {
 		} );
 
 		it.each( [
-			// Uppercase hex
 			[ 'uppercase hex', '#3858E9', '#FCFCFC' ],
-			// Mixed case hex
 			[ 'mixed case hex', '#3858E9', '#fCfCfC' ],
-			// `rgb()` of the same color
 			[ 'rgb()', 'rgb(56, 88, 233)', 'rgb(252, 252, 252)' ],
 		] )(
 			'treats %s representations of the defaults as defaults',
@@ -80,11 +77,9 @@ describe( 'useThemeProviderStyles', () => {
 
 	describe( 'when seeds are unparseable', () => {
 		it( 'does not silently treat an unparseable `color.primary` as default', () => {
-			// `equals( 'not-a-color', '#3858e9' )` throws; the hook's
-			// `try/catch` swallows that so `primaryIsDefault` stays `false`
-			// and the emission path runs. The downstream `to(...)` call in
-			// `legacyWpAdminThemeOverridesCSS` is what surfaces the parse
-			// error (matching the pre-existing behavior from #77653).
+			// The `equals` call inside the hook is wrapped in `try/catch`,
+			// so this throw must come from the downstream emission path
+			// (matching #77653's behavior).
 			expect( () =>
 				renderHook( () =>
 					useThemeProviderStyles( {

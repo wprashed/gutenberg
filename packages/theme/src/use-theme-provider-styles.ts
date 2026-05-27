@@ -35,9 +35,8 @@ function customRgbFormat( color: PlainColorObject ): string {
 }
 
 function legacyWpAdminThemeOverridesCSS( accent: string ): Entry[] {
-	// Register sRGB so `to( accent, HSL )` can parse hex / `rgb(...)` inputs.
-	// `ColorSpace.register` is idempotent — see #77653 for why we keep this
-	// inline rather than at module scope.
+	// Register sRGB inline (idempotent) to keep the module top-level free of
+	// side effects. See #77653.
 	ColorSpace.register( sRGB );
 	const parsedAccent = to( accent, HSL );
 	const parsedL = parsedAccent.coords[ 2 ] ?? 0;
@@ -100,8 +99,9 @@ function generateStyles( {
 	return Object.fromEntries(
 		[
 			colorTokensCSS( computedColorRamps ),
-			// Only override `--wp-admin-theme-color*` when the primary differs
-			// from the WPDS default — WP Core provides defaults otherwise.
+			// Only override `--wp-admin-theme-color*` when the primary
+			// actually differs from the WPDS default; otherwise leave any
+			// upstream definition intact.
 			primaryIsDefault ? [] : legacyWpAdminThemeOverridesCSS( primary ),
 		].flat()
 	);
@@ -140,21 +140,17 @@ export function useThemeProviderStyles( {
 	);
 
 	// When everything resolves to the WPDS defaults, the prebuilt `:root` CSS
-	// already provides every variable, so we can skip the per-instance
-	// `<style>` entirely. Comparing via `colorjs.io`'s `equals` means any
-	// parseable representation of the same color counts as default (e.g.
-	// `#3858E9` ≡ `#3858e9` ≡ `rgb(56 88 233)`).
+	// already provides every variable, so skip the per-instance `<style>`.
+	// `colorjs.io`'s `equals` treats any parseable representation of the
+	// same color as default (e.g. `#3858E9` ≡ `#3858e9` ≡ `rgb(56 88 233)`).
 	let primaryIsDefault = false;
 	let bgIsDefault = false;
 	try {
-		// Register sRGB so `equals` can parse hex / `rgb(...)` inputs.
-		// `ColorSpace.register` is idempotent (#77653).
+		// Register sRGB inline (idempotent) — see #77653. `equals` throws on
+		// unparseable inputs; we swallow that here so the emission path
+		// still runs and the downstream `to( accent, HSL )` call is what
+		// surfaces the parse error to the consumer.
 		ColorSpace.register( sRGB );
-		// `equals` throws on unparseable inputs (e.g. a consumer passes
-		// `color.primary="not-a-color"`). We swallow that here so the
-		// emission path still runs — the downstream `to( accent, HSL )` call
-		// in `legacyWpAdminThemeOverridesCSS` is what surfaces a clear error
-		// in that case (see #77653).
 		primaryIsDefault = equals( primary, DEFAULT_SEED_COLORS.primary );
 		bgIsDefault = equals( bg, DEFAULT_SEED_COLORS.bg );
 	} catch {}

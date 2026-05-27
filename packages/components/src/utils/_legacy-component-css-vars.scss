@@ -1,18 +1,13 @@
-// Legacy `--wp-components-*` aliases mapping to current WPDS / admin theme
-// tokens. Lives in the `@wordpress/components` package because these are
-// package-internal compatibility tokens, expected to be removed once
-// component styles consume `--wpds-*` (and `--wp-admin-theme-color*`)
-// directly.
-//
-// Emitted once at `:root` via the `wp-components` stylesheet, so anything
-// that already depends on `wp-components` (including the editor iframe via
-// `$wp_edit_blocks_dependencies`) gets these aliases for free, even without
-// a `<ThemeProvider>` instance in the tree.
+// Legacy `--wp-components-*` aliases redirecting to current WPDS tokens
+// (and to `--wp-admin-theme-color*` for the accent variants). Ships at
+// `:root` so component styles get sensible defaults without depending on a
+// runtime `<ThemeProvider>`. To be removed once component styles reference
+// `--wpds-*` / `--wp-admin-theme-color*` directly.
 
 /* stylelint-disable declaration-property-value-disallowed-list --
- * This file is the single place that DEFINES `--wp-components-color-*`. The
+ * This file is the one place that defines `--wp-components-color-*`. The
  * disallow rule targets consumers (which should use `$components-color-*`
- * from `theme-variables.scss` instead), not these declarations.
+ * from `theme-variables.scss`), not these declarations.
  */
 /* prettier-ignore */
 :root {

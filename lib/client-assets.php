@@ -143,10 +143,10 @@ function gutenberg_register_packages_styles( $styles ) {
 	// wp-customize-widgets: add wp-edit-blocks (custom handle not auto-inferred)
 	$styles->query( 'wp-customize-widgets', 'registered' )->deps[] = 'wp-edit-blocks';
 
-	// Register wp-theme (Design System CSS custom properties shipped by the
-	// `@wordpress/theme` package). Loaded ahead of wp-base-styles so the
-	// `:root` token block is available everywhere wp-base-styles is enqueued
-	// (including the editor iframe via $wp_edit_blocks_dependencies below).
+	// Register wp-theme (Design System tokens from @wordpress/theme) as a
+	// dependency of wp-base-styles so its `:root` token block loads
+	// everywhere wp-base-styles does, including the editor iframe via
+	// $wp_edit_blocks_dependencies below.
 	gutenberg_override_style(
 		$styles,
 		'wp-theme',
@@ -195,9 +195,9 @@ function gutenberg_register_packages_styles( $styles ) {
 
 	// Only add CONTENT styles here that should be enqueued in the iframe!
 	$wp_edit_blocks_dependencies = array(
-		// Design System tokens must load first so the `:root` CSS custom
-		// properties are defined before any consuming stylesheet (or
-		// `<ThemeProvider>` overrides) reads them inside the editor iframe.
+		// Design System tokens load first so the `:root` CSS custom
+		// properties are defined before any consuming stylesheet reads
+		// them inside the editor iframe.
 		'wp-theme',
 		'wp-components',
 		// This need to be added before the block library styles,
