@@ -21,7 +21,6 @@ import {
 } from '../../types';
 import { LayoutModelEditField } from './layout-model-edit-field';
 
-const DEFAULT_MIN_COLUMN_WIDTH = 350;
 const DEFAULT_ROW_HEIGHT = 200;
 const ROW_HEIGHT_AUTO = 'auto' as const;
 
@@ -101,39 +100,6 @@ const fields: Field< WidgetGridSettings >[] = [
 		getValue: ( { item } ) => getModel( item ),
 	},
 	{
-		id: 'adaptiveColumns',
-		type: 'boolean',
-		Edit: 'toggle',
-		label: __( 'Adjust on narrow screens' ),
-		description: __(
-			'Show fewer columns when the dashboard gets too narrow to keep tiles readable.'
-		),
-		getValue: ( { item } ) => item.minColumnWidth !== 0,
-		setValue: ( { item, value } ) => {
-			if ( ! value ) {
-				return { minColumnWidth: 0 };
-			}
-			const previous = item.minColumnWidth;
-			return {
-				minColumnWidth:
-					previous && previous > 0
-						? previous
-						: DEFAULT_MIN_COLUMN_WIDTH,
-			};
-		},
-	},
-	{
-		id: 'minColumnWidth',
-		type: 'integer',
-		Edit: StepperIntegerEdit,
-		label: __( 'Minimum tile width' ),
-		description: __(
-			'The smallest tile width before a column is removed.'
-		),
-		isValid: { min: 48, max: 600 },
-		isVisible: ( item ) => item.minColumnWidth !== 0,
-	},
-	{
 		id: 'autoRowHeight',
 		type: 'boolean',
 		Edit: 'toggle',
@@ -162,13 +128,7 @@ const fields: Field< WidgetGridSettings >[] = [
 
 const form: Form = {
 	layout: { type: 'regular', labelPosition: 'top' },
-	fields: [
-		'model',
-		'adaptiveColumns',
-		'minColumnWidth',
-		'autoRowHeight',
-		'rowHeight',
-	],
+	fields: [ 'model', 'autoRowHeight', 'rowHeight' ],
 };
 
 interface LayoutSettingsProps {
@@ -184,8 +144,8 @@ interface LayoutSettingsProps {
 }
 
 /**
- * Non-modal side drawer for grid-level settings (model, column
- * behavior, row height). Reads from and writes to the staging copy
+ * Non-modal side drawer for grid-level settings (model, row height).
+ * Reads from and writes to the staging copy
  * in `useDashboardInternalContext`, so every edit shows up live
  * behind the drawer and is committed or rolled back by the drawer's
  * Save / Cancel buttons.
