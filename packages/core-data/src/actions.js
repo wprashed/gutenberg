@@ -457,12 +457,17 @@ export const editEntityRecord =
 				? LOCAL_UNDO_IGNORED_ORIGIN
 				: LOCAL_EDITOR_ORIGIN;
 
+			const syncUpdateOptions = { isNewUndoLevel };
+			if ( Object.hasOwn( options, 'isCached' ) ) {
+				syncUpdateOptions.isCached = options.isCached;
+			}
+
 			getSyncManager()?.update(
 				objectType,
 				objectId,
 				editsWithMerges,
 				origin,
-				{ isNewUndoLevel }
+				syncUpdateOptions
 			);
 		}
 		if ( ! options.undoIgnore ) {

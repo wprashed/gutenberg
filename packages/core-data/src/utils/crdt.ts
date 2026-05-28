@@ -17,6 +17,7 @@ import {
 	type ObjectID,
 	type ObjectType,
 	type SyncConfig,
+	type SyncConfigApplyChangesOptions,
 	Y,
 } from '@wordpress/sync';
 
@@ -129,15 +130,17 @@ function defaultApplyChangesToCRDTDoc(
  * Given a set of local changes to a post record, apply those changes to the
  * local Y.Doc.
  *
- * @param {CRDTDoc}     ydoc
- * @param {PostChanges} changes
- * @param {Set<string>} syncedProperties
+ * @param {CRDTDoc}                       ydoc
+ * @param {PostChanges}                   changes
+ * @param {Set<string>}                   syncedProperties
+ * @param {SyncConfigApplyChangesOptions} options
  * @return {void}
  */
 export function applyPostChangesToCRDTDoc(
 	ydoc: CRDTDoc,
 	changes: PostChanges,
-	syncedProperties: Set< string >
+	syncedProperties: Set< string >,
+	options: SyncConfigApplyChangesOptions = {}
 ): void {
 	const ymap = getRootMap< YPostRecord >( ydoc, CRDT_RECORD_MAP_KEY );
 
@@ -195,9 +198,15 @@ export function applyPostChangesToCRDTDoc(
 					ymap.set( key, currentBlocks );
 				}
 
+				// Cached/non-persistent editor updates should not create undo
+				// history just because regenerated block clientIds changed.
+				const preserveClientIds = options.isCached === true;
+
 				// Merge blocks does not need `setValue` because it is operating on a
 				// Yjs type that is already in the Y.Doc.
-				mergeCrdtBlocks( currentBlocks, newValue, newCursorPosition );
+				mergeCrdtBlocks( currentBlocks, newValue, newCursorPosition, {
+					preserveClientIds,
+				} );
 				break;
 			}
 

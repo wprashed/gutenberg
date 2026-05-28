@@ -186,7 +186,8 @@ describe( 'loadPostTypeEntities', () => {
 		expect( applyPostChangesToCRDTDoc ).toHaveBeenCalledWith(
 			{},
 			{},
-			expect.any( Set )
+			expect.any( Set ),
+			undefined
 		);
 
 		const syncedProperties = applyPostChangesToCRDTDoc.mock.calls[ 0 ][ 2 ];

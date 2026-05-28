@@ -421,6 +421,45 @@ describe( 'editEntityRecord', () => {
 			);
 		} );
 
+		it( 'passes cached edit options to SyncManager#update', () => {
+			const dispatch = jest.fn();
+			const select = {
+				getEntityConfig: () => ( {
+					kind: 'postType',
+					name: 'post',
+					mergedEdits: {},
+					syncConfig: {},
+				} ),
+				getRawEntityRecord: () => ( {
+					id: 1,
+					title: 'Original Title',
+				} ),
+				getEditedEntityRecord: () => ( {
+					id: 1,
+					title: 'Original Title',
+				} ),
+				getUndoManager: () => ( {
+					addRecord: jest.fn(),
+				} ),
+			};
+
+			editEntityRecord(
+				'postType',
+				'post',
+				1,
+				{ title: 'New Title' },
+				{ isCached: true }
+			)( { select, dispatch } );
+
+			expect( syncManager.update ).toHaveBeenCalledWith(
+				'postType/post',
+				1,
+				{ title: 'New Title' },
+				'local-editor',
+				{ isNewUndoLevel: false, isCached: true }
+			);
+		} );
+
 		it( 'does not call SyncManager#update when syncConfig is not defined', () => {
 			const dispatch = jest.fn();
 			const select = {
