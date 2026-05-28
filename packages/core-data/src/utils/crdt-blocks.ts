@@ -608,9 +608,9 @@ export function mergeCrdtBlocks(
 
 					case 'clientId': {
 						// Code Editor changes re-parse raw HTML on every
-						// keystroke and mint fresh clientIds. Keep Y.Doc
-						// clientIds stable for that path so peers do not
-						// remount unchanged blocks on every edit.
+						// keystroke and create blocks with randomized clientIds.
+						// Keep Y.Doc clientIds stable so peers do not remount
+						// unchanged blocks on every Code Editor edit.
 						if ( options.preserveClientIds ) {
 							break;
 						}
