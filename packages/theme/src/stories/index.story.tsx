@@ -27,9 +27,8 @@ const meta: Meta< typeof ThemeProvider > = {
 };
 export default meta;
 
-function getCSSCustomPropsFromStylesheets() {
-	const semanticProps: Record< string, string > = {};
-	const legacyProps: Record< string, string > = {};
+function getWPDSColorTokensFromStylesheets() {
+	const tokens: Record< string, string > = {};
 
 	for ( const sheet of document.styleSheets ) {
 		try {
@@ -37,16 +36,8 @@ function getCSSCustomPropsFromStylesheets() {
 				const ruleStyle = ( rule as CSSStyleRule ).style;
 				if ( ruleStyle ) {
 					for ( const name of ruleStyle ) {
-						if (
-							name.startsWith( '--wp-admin-theme' ) ||
-							name.startsWith( '--wp-components-color' )
-						) {
-							legacyProps[ name ] = ruleStyle
-								.getPropertyValue( name )
-								.trim();
-						}
 						if ( name.startsWith( '--wpds-color' ) ) {
-							semanticProps[ name ] = ruleStyle
+							tokens[ name ] = ruleStyle
 								.getPropertyValue( name )
 								.trim();
 						}
@@ -61,7 +52,7 @@ function getCSSCustomPropsFromStylesheets() {
 		}
 	}
 
-	return { semanticProps, legacyProps };
+	return tokens;
 }
 
 const ColorTokenTable = ( {
@@ -106,28 +97,16 @@ const ColorTokenTable = ( {
 };
 
 const DSTokensList = () => {
-	const [ props, setProps ] = useState< {
-		semanticProps: Record< string, string >;
-		legacyProps: Record< string, string >;
-	} >( {
-		semanticProps: {},
-		legacyProps: {},
-	} );
+	const [ tokens, setTokens ] = useState< Record< string, string > >( {} );
 
 	useEffect( () => {
-		setProps( getCSSCustomPropsFromStylesheets() );
+		setTokens( getWPDSColorTokensFromStylesheets() );
 	}, [] );
 
 	return (
 		<div style={ { color: 'var( --wpds-color-fg-content-neutral )' } }>
 			<h1>Design System Color tokens</h1>
-			<h2>Semantic tokens (can be consumed directly)</h2>
-			<ColorTokenTable tokens={ props.semanticProps } />
-			<h2>Legacy tokens (should not be consumed directly)</h2>
-			<details>
-				<summary>Click to expand</summary>
-				<ColorTokenTable tokens={ props.legacyProps } />
-			</details>
+			<ColorTokenTable tokens={ tokens } />
 		</div>
 	);
 };
