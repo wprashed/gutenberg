@@ -606,8 +606,7 @@ describe( 'SyncManager', () => {
 			// Verify that applyChangesToCRDTDoc was called with the changes.
 			expect( mockSyncConfig.applyChangesToCRDTDoc ).toHaveBeenCalledWith(
 				expect.any( Y.Doc ),
-				changes,
-				{ isCached: false }
+				changes
 			);
 
 			// Verify that the record metadata was not updated.
@@ -615,31 +614,6 @@ describe( 'SyncManager', () => {
 			const stateMap = ydoc.getMap( CRDT_STATE_MAP_KEY );
 			expect( stateMap.get( SAVED_AT_KEY ) ).toBeUndefined();
 			expect( stateMap.get( SAVED_BY_KEY ) ).toBeUndefined();
-		} );
-
-		it( 'passes cached update options to the sync config', async () => {
-			const manager = createSyncManager();
-
-			await manager.load(
-				mockSyncConfig,
-				'post',
-				'123',
-				mockRecord,
-				mockHandlers
-			);
-
-			jest.clearAllMocks();
-
-			const changes = { title: 'Updated Title' };
-			manager.update( 'post', '123', changes, 'local-editor', {
-				isCached: true,
-			} );
-
-			expect( mockSyncConfig.applyChangesToCRDTDoc ).toHaveBeenCalledWith(
-				expect.any( Y.Doc ),
-				changes,
-				{ isCached: true }
-			);
 		} );
 
 		it( 'applies local CRDT updates synchronously before processing remote record updates', async () => {
@@ -806,8 +780,7 @@ describe( 'SyncManager', () => {
 			// Verify that applyChangesToCRDTDoc was called with the changes.
 			expect( mockSyncConfig.applyChangesToCRDTDoc ).toHaveBeenCalledWith(
 				expect.any( Y.Doc ),
-				changes,
-				{ isCached: false }
+				changes
 			);
 
 			// Verify that the record metadata was updated.

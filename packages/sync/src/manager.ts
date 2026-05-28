@@ -621,7 +621,6 @@ export function createSyncManager( debug = false ): SyncManager {
 	 * @param {Partial< ObjectData >}    changes                Updates to make.
 	 * @param {string}                   origin                 The source of change.
 	 * @param {SyncManagerUpdateOptions} options                Optional flags for the update.
-	 * @param {boolean}                  options.isCached       Whether this update is cached/non-persistent. Defaults to false.
 	 * @param {boolean}                  options.isSave         Whether this update is part of a save operation. Defaults to false.
 	 * @param {boolean}                  options.isNewUndoLevel Whether to create a new undo level for this change. Defaults to false.
 	 */
@@ -632,11 +631,7 @@ export function createSyncManager( debug = false ): SyncManager {
 		origin: string,
 		options: SyncManagerUpdateOptions = {}
 	): void {
-		const {
-			isCached = false,
-			isSave = false,
-			isNewUndoLevel = false,
-		} = options;
+		const { isSave = false, isNewUndoLevel = false } = options;
 		const entityId = getEntityId( objectType, objectId );
 		const entityState = entityStates.get( entityId );
 		const collectionState = collectionStates.get( objectType );
@@ -657,9 +652,7 @@ export function createSyncManager( debug = false ): SyncManager {
 				log( 'updateCRDTDoc', 'applying changes', entityId, {
 					changedKeys: Object.keys( changes ),
 				} );
-				syncConfig.applyChangesToCRDTDoc( ydoc, changes, {
-					isCached,
-				} );
+				syncConfig.applyChangesToCRDTDoc( ydoc, changes );
 
 				if ( isSave ) {
 					markEntityAsSaved( ydoc );
