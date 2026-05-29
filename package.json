@@ -24,32 +24,28 @@
 		"packageNamespace": "wordpress",
 		"handlePrefix": "wp",
 		"pages": [
-			"font-library",
-			"options-connectors",
-			"guidelines",
+			{
+				"id": "font-library",
+				"stable": true
+			},
+			{
+				"id": "options-connectors",
+				"stable": true
+			},
+			{
+				"id": "guidelines",
+				"stable": true
+			},
 			{
 				"id": "site-editor-v2",
 				"init": [
 					"@wordpress/edit-site-init"
-				],
-				"experimental": true
+				]
 			},
-			{
-				"id": "media-editor",
-				"experimental": true
-			},
-			{
-				"id": "experiments",
-				"experimental": true
-			},
-			{
-				"id": "content-types",
-				"experimental": true
-			},
-			{
-				"id": "dashboard",
-				"experimental": true
-			}
+			"media-editor",
+			"experiments",
+			"content-types",
+			"dashboard"
 		]
 	},
 	"config": {

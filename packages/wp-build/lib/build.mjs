@@ -2160,25 +2160,27 @@ async function buildAll( baseUrlExpression ) {
 		} )
 	);
 
-	// Normalize PAGES config to support both string and object formats
+	// Normalize PAGES config to support both string and object formats.
+	// String shorthand is treated as non-stable; pages must opt in to Core
+	// builds explicitly with `stable: true`.
 	const normalizedPages = PAGES.map( ( page ) => {
 		if ( typeof page === 'string' ) {
-			return { id: page, init: [], title: undefined };
+			return { id: page, init: [], title: undefined, stable: false };
 		}
 		return {
 			id: page.id,
 			init: page.init || [],
 			title: page.title || undefined,
-			experimental: page.experimental || false,
+			stable: page.stable === true,
 		};
 	} );
 
-	// When building for WordPress Core, exclude experimental pages.
+	// When building for WordPress Core, include only pages explicitly marked stable.
 	const isCoreBuild =
 		boolConfigVal( process.env.IS_WORDPRESS_CORE ) ??
 		boolConfigVal( process.env.npm_package_config_IS_WORDPRESS_CORE );
 	const activePages = isCoreBuild
-		? normalizedPages.filter( ( page ) => ! page.experimental )
+		? normalizedPages.filter( ( page ) => page.stable )
 		: normalizedPages;
 
 	const activePageIds = new Set( activePages.map( ( p ) => p.id ) );
