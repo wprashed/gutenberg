@@ -5,6 +5,7 @@
 ### Enhancements
 
 -   Redraw 34 icons as stroke-based for variable stroke-width support (per [#78774](https://github.com/WordPress/gutenberg/pull/78774)): `addCard`, `addTemplate`, `cancelCircleFilled`, `caution`, `cautionFilled`, `code`, `commentAuthorAvatar`, `cover`, `currencyDollar`, `currencyEuro`, `currencyPound`, `drafts`, `help`, `helpFilled`, `image`, `info`, `lifesaver`, `link`, `linkOff`, `navigation`, `notAllowed`, `paragraph`, `pending`, `plusCircle`, `plusCircleFilled`, `published`, `scheduled`, `siteLogo`, `starEmpty`, `starFilled`, `starHalf`, `styles`, `timeToRead`, `tip`. ([#78804](https://github.com/WordPress/gutenberg/pull/78804))
+-   Stroke-based icons now declare `fill` via inline `style` on the outer `<svg>` instead of the `fill` attribute, so the source's intent survives ordinary 3rd-party CSS overrides like `.foo svg { fill: currentColor }` without using `!important`. ([#78804](https://github.com/WordPress/gutenberg/pull/78804))
 
 ## 13.2.0 (2026-05-27)
 
