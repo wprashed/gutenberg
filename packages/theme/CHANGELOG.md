@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### New Features
+
+-   Add `cornerRadius` prop to `ThemeProvider` for configuring the border-radius preset (`none`, `sm`, `md`, `lg`) via prebuilt design token modes.
+
 ### Breaking Changes
 
 -   Drop the experimental `density` support from `ThemeProvider`. The `density` prop has been removed, along with the related `data-wpds-density` attribute and the per-density overrides on `--wpds-dimension-padding-*` / `--wpds-dimension-gap-*` tokens ([#78741](https://github.com/WordPress/gutenberg/pull/78741)).
