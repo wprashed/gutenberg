@@ -47,6 +47,27 @@ export function createUndoManager(): SyncUndoManager {
 	} );
 
 	yUndoManager.on( 'stack-item-added', ( event: StackItemEvent ) => {
+		// DEBUG INSTRUMENTATION: log every undo stack item addition so we can
+		// see what's triggering hasUndo=true in inner-blocks-templates CI.
+		// Remove before merge.
+		const changedTypeNames: string[] = [];
+		event.changedParentTypes.forEach( ( _events, ytype ) => {
+			const ctor = ( ytype as { constructor?: { name?: string } } )
+				.constructor;
+			changedTypeNames.push( ctor?.name ?? 'unknown' );
+		} );
+		// eslint-disable-next-line no-console
+		console.warn( '[RTC DEBUG] undo stack-item-added', {
+			origin:
+				typeof event.origin === 'string'
+					? event.origin
+					: String( event.origin ),
+			type: event.type,
+			changedTypeCount: event.changedParentTypes.size,
+			changedTypeNames,
+			stack: new Error().stack,
+		} );
+
 		const handlers = undoMetaHandlers.get( event.ydoc );
 		if ( ! handlers ) {
 			return;

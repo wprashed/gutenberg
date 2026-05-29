@@ -606,6 +606,22 @@ export const saveEntityRecord =
 			throwOnError = false,
 		} = options;
 
+		// DEBUG INSTRUMENTATION: log every saveEntityRecord call with its
+		// caller stack so we can identify what triggers the post-reload save
+		// in inner-blocks-templates CI failure. Remove before merge.
+		if ( kind === 'postType' ) {
+			// eslint-disable-next-line no-console
+			console.warn( '[RTC DEBUG] saveEntityRecord call', {
+				kind,
+				name,
+				recordKeys: Object.keys( record ),
+				recordId: record?.id,
+				isAutosave,
+				__unstableSkipSyncUpdate,
+				stack: new Error().stack,
+			} );
+		}
+
 		logEntityDeprecation( kind, name, 'saveEntityRecord' );
 		const configs = await resolveSelect.getEntitiesConfig( kind );
 		const entityConfig = configs.find(

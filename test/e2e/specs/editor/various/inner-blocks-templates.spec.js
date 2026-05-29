@@ -26,9 +26,10 @@ test.describe( 'Inner blocks templates', () => {
 		editor,
 		page,
 	} ) => {
-		// DEBUG INSTRUMENTATION: forward browser console output and page errors
-		// to the test runner so CI logs include the [RTC DEBUG] warning we added
-		// in packages/core-data/src/utils/crdt.ts. Remove before merge.
+		// DEBUG INSTRUMENTATION: forward browser console output (including
+		// [RTC DEBUG] warnings from saveEntityRecord and the Yjs undo manager)
+		// to the test runner. Stack traces are captured via console.warn's
+		// `stack: new Error().stack` field. Remove before merge.
 		page.on( 'console', ( msg ) => {
 			const text = msg.text();
 			if (
@@ -36,8 +37,23 @@ test.describe( 'Inner blocks templates', () => {
 				msg.type() === 'warning' ||
 				msg.type() === 'error'
 			) {
-				// eslint-disable-next-line no-console
-				console.log( `[browser:${ msg.type() }] ${ text }` );
+				// Try to resolve JSHandle args to get the stack field too.
+				Promise.all(
+					msg.args().map( ( a ) => a.jsonValue().catch( () => null ) )
+				)
+					.then( ( vals ) => {
+						// eslint-disable-next-line no-console
+						console.log(
+							`[browser:${ msg.type() }]`,
+							...vals.map( ( v ) =>
+								typeof v === 'string' ? v : JSON.stringify( v )
+							)
+						);
+					} )
+					.catch( () => {
+						// eslint-disable-next-line no-console
+						console.log( `[browser:${ msg.type() }] ${ text }` );
+					} );
 			}
 		} );
 		page.on( 'pageerror', ( err ) => {
