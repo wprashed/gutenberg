@@ -450,12 +450,15 @@ export const editEntityRecord =
 				? false
 				: ! options.isCached;
 
-			// Use an untracked origin for undoIgnore changes so the Yjs
-			// UndoManager does not capture them as undo levels, while
-			// still syncing them to the CRDT document and other peers.
-			const origin = options.undoIgnore
-				? LOCAL_UNDO_IGNORED_ORIGIN
-				: LOCAL_EDITOR_ORIGIN;
+			// Use an untracked origin for undoIgnore and cached changes so
+			// the Yjs UndoManager does not capture them as undo levels,
+			// while still syncing them to the CRDT document and other peers.
+			// Cached edits come from non-persistent flows (e.g. inner-block
+			// template syncs via onInput) and should not create undo entries.
+			const origin =
+				options.undoIgnore || options.isCached
+					? LOCAL_UNDO_IGNORED_ORIGIN
+					: LOCAL_EDITOR_ORIGIN;
 
 			getSyncManager()?.update(
 				objectType,
