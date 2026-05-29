@@ -401,33 +401,10 @@ export function getPostChangesFromCRDTDoc(
 					) {
 						const blocksJson = ymap.get( 'blocks' )?.toJSON() ?? [];
 
-						const serializedYdocBlocks =
-							__unstableSerializeAndClean( blocksJson ).trim();
-						const recordContent = getRawValue(
-							editedRecord.content
+						return (
+							__unstableSerializeAndClean( blocksJson ).trim() !==
+							getRawValue( editedRecord.content )
 						);
-						const differs = serializedYdocBlocks !== recordContent;
-
-						// DEBUG INSTRUMENTATION: log when blocks-vs-content comparison
-						// finds a mismatch, so CI failures of inner-blocks-templates
-						// can show which side is wrong. Remove before merge.
-						if ( differs ) {
-							// eslint-disable-next-line no-console
-							console.warn(
-								'[RTC DEBUG] getPostChangesFromCRDTDoc blocks invalidation',
-								{
-									serializedYdocBlocks,
-									recordContent,
-									blocksJsonLength: Array.isArray(
-										blocksJson
-									)
-										? blocksJson.length
-										: -1,
-								}
-							);
-						}
-
-						return differs;
 					}
 
 					return true;
