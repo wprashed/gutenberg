@@ -24,6 +24,9 @@
 		"packageNamespace": "wordpress",
 		"handlePrefix": "wp",
 		"pages": [
+			"font-library",
+			"options-connectors",
+			"guidelines",
 			{
 				"id": "site-editor-v2",
 				"init": [
@@ -31,13 +34,22 @@
 				],
 				"experimental": true
 			},
-			"media-editor",
-			"font-library",
-			"options-connectors",
-			"guidelines",
-			"experiments",
-			"content-types",
-			"dashboard"
+			{
+				"id": "media-editor",
+				"experimental": true
+			},
+			{
+				"id": "experiments",
+				"experimental": true
+			},
+			{
+				"id": "content-types",
+				"experimental": true
+			},
+			{
+				"id": "dashboard",
+				"experimental": true
+			}
 		]
 	},
 	"config": {
