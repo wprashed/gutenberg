@@ -234,12 +234,13 @@ describe( 'getEntityRecord', () => {
 		expect( dispatch.saveEntityRecord ).not.toHaveBeenCalled();
 	} );
 
-	it( 'persistCRDTDoc saves only the entity ID and omits REST-invalid fields', async () => {
+	it( 'persistCRDTDoc saves only the entity ID and modified date, omitting REST-invalid fields', async () => {
 		const POST_RECORD = { id: 1, title: 'Test Post', meta: {} };
 		const EDITED_RECORD = {
 			id: 1,
 			title: 'Edited Post',
 			ping_status: '',
+			modified: '2024-01-15T10:30:00',
 			meta: { _crdt_document: 'doc2' },
 		};
 		const POST_RESPONSE = {
@@ -288,18 +289,24 @@ describe( 'getEntityRecord', () => {
 			resolveSelectWithSync.getEditedEntityRecord
 		).toHaveBeenCalledWith( 'postType', 'post', 1 );
 
-		// Should only send the entity ID. The pre-persist hook creates the
-		// persisted CRDT meta without round-tripping the full edited record.
+		// Should only send the entity ID and modified date. The pre-persist
+		// hook creates the persisted CRDT meta without round-tripping the
+		// full edited record.
 		expect( dispatch.saveEntityRecord ).toHaveBeenCalledWith(
 			'postType',
 			'post',
-			{ id: 1 },
+			{ id: 1, modified: '2024-01-15T10:30:00' },
 			{ __unstableSkipSyncUpdate: true }
 		);
 	} );
 
 	it( 'persistCRDTDoc saves even when there are no unsaved edits', async () => {
-		const POST_RECORD = { id: 1, title: 'Test Post', meta: {} };
+		const POST_RECORD = {
+			id: 1,
+			title: 'Test Post',
+			modified: '2024-01-15T10:30:00',
+			meta: {},
+		};
 		const POST_RESPONSE = {
 			json: () => Promise.resolve( POST_RECORD ),
 		};
@@ -341,11 +348,11 @@ describe( 'getEntityRecord', () => {
 		handlers.persistCRDTDoc();
 		await resolveSelectWithSync.getEditedEntityRecord();
 
-		// Should save only the entity ID even with no edits.
+		// Should save only the entity ID and modified date even with no edits.
 		expect( dispatch.saveEntityRecord ).toHaveBeenCalledWith(
 			'postType',
 			'post',
-			{ id: 1 },
+			{ id: 1, modified: '2024-01-15T10:30:00' },
 			{ __unstableSkipSyncUpdate: true }
 		);
 	} );
@@ -353,8 +360,18 @@ describe( 'getEntityRecord', () => {
 	it( 'persistCRDTDoc does not replay a stale save response into the sync document', async () => {
 		const INITIAL_TITLE = 'Initial Title';
 		const SYNCED_TITLE = 'Synced Title';
-		const POST_RECORD = { id: 1, title: INITIAL_TITLE, meta: {} };
-		const EDITED_RECORD = { id: 1, title: SYNCED_TITLE, meta: {} };
+		const POST_RECORD = {
+			id: 1,
+			title: INITIAL_TITLE,
+			modified: '2024-01-15T10:30:00',
+			meta: {},
+		};
+		const EDITED_RECORD = {
+			id: 1,
+			title: SYNCED_TITLE,
+			modified: '2024-01-15T10:30:00',
+			meta: {},
+		};
 		const STALE_SAVE_RESPONSE = {
 			id: 1,
 			title: INITIAL_TITLE,
@@ -443,7 +460,7 @@ describe( 'getEntityRecord', () => {
 		expect( dispatch.saveEntityRecord ).toHaveBeenCalledWith(
 			'postType',
 			'post',
-			{ id: 1 },
+			{ id: 1, modified: '2024-01-15T10:30:00' },
 			{ __unstableSkipSyncUpdate: true }
 		);
 		expect( syncManager.update ).toHaveBeenCalledWith(

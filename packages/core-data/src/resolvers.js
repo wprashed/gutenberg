@@ -271,6 +271,7 @@ export const getEntityRecord =
 										{
 											[ entityIdKey ]:
 												editedRecord[ entityIdKey ],
+											modified: editedRecord.modified,
 										},
 										{ __unstableSkipSyncUpdate: true }
 									);
