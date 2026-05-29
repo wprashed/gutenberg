@@ -53,6 +53,162 @@ function block_core_gallery_render_context( $context, $parsed_block ) {
 add_filter( 'render_block_context', 'block_core_gallery_render_context', 10, 2 );
 
 /**
+ * Resolves a Gallery block's `dynamicSource` to an ordered list of image
+ * attachment IDs.
+ *
+ * The `type` key is the dispatch discriminator. `attachedToPost` is a
+ * context-relative anchor (the post the gallery is rendered within); future
+ * source types translate their REST-named fields (`author`, `categories`,
+ * `after`/`before`, `media_type`, etc.) into `WP_Query` arguments here.
+ *
+ * @since 7.0.0
+ *
+ * @param array    $source The gallery's `dynamicSource` attribute.
+ * @param WP_Block $block  The gallery block instance being rendered.
+ * @return int[] Ordered list of image attachment IDs.
+ */
+function block_core_gallery_resolve_dynamic_source( $source, $block ) {
+	$type = $source['type'] ?? null;
+
+	switch ( $type ) {
+		case 'attachedToPost':
+			$post_id = $block->context['postId'] ?? get_the_ID();
+			if ( ! $post_id ) {
+				return array();
+			}
+			// `get_attached_media()` preserves menu order, then date.
+			$attachments = get_attached_media( 'image', $post_id );
+			return array_map( 'intval', array_keys( $attachments ) );
+	}
+
+	// Unknown or not-yet-implemented source type.
+	return array();
+}
+
+/**
+ * Builds the link-related image block attributes for a dynamically rendered
+ * gallery image, mapping the gallery-wide `linkTo` setting onto a single image.
+ *
+ * Mirrors the editor's `getHrefAndDestination()` (see `gallery/utils.js`).
+ *
+ * @since 7.0.0
+ *
+ * @param int   $attachment_id The image attachment ID.
+ * @param array $attributes    The gallery block attributes.
+ * @return array Partial image block attributes (`href`, `linkDestination`,
+ *               `linkTarget`, `rel`, `lightbox`).
+ */
+function block_core_gallery_dynamic_image_link_attributes( $attachment_id, $attributes ) {
+	$link_to = $attributes['linkTo'] ?? 'none';
+	$attrs   = array();
+
+	switch ( $link_to ) {
+		// Gutenberg uses 'media'/'attachment'; WP Core uses 'file'/'post'.
+		case 'media':
+		case 'file':
+			$attrs['href']            = wp_get_attachment_url( $attachment_id );
+			$attrs['linkDestination'] = 'media';
+			break;
+		case 'attachment':
+		case 'post':
+			$attrs['href']            = get_attachment_link( $attachment_id );
+			$attrs['linkDestination'] = 'attachment';
+			break;
+		case 'lightbox':
+			$attrs['linkDestination'] = 'none';
+			$attrs['lightbox']        = array( 'enabled' => true );
+			break;
+	}
+
+	if ( ! empty( $attrs['href'] ) && '_blank' === ( $attributes['linkTarget'] ?? '' ) ) {
+		$attrs['linkTarget'] = '_blank';
+		$attrs['rel']        = 'noreferrer noopener';
+	}
+
+	return $attrs;
+}
+
+/**
+ * Renders a single `core/image` block for a Gallery block running in dynamic
+ * mode, applying the gallery-wide settings that affect how an image renders.
+ *
+ * The image markup is generated here (via `wp_get_attachment_image()`) and
+ * rendered through a real `core/image` block instance so that the image block's
+ * own render callback and lightbox behavior run, and so the gallery's existing
+ * lightbox/interactivity post-processing can pick it up.
+ *
+ * @since 7.0.0
+ *
+ * @param int   $attachment_id The image attachment ID.
+ * @param array $attributes    The gallery block attributes.
+ * @param array $context       Context to expose to the inner image block.
+ * @return string The rendered image block HTML, or an empty string on failure.
+ */
+function block_core_gallery_render_dynamic_image( $attachment_id, $attributes, $context ) {
+	$size_slug    = $attributes['sizeSlug'] ?? 'large';
+	$aspect_ratio = $attributes['aspectRatio'] ?? 'auto';
+
+	$img_attr = array( 'class' => 'wp-image-' . $attachment_id );
+	if ( $aspect_ratio && 'auto' !== $aspect_ratio ) {
+		$img_attr['style'] = sprintf( 'aspect-ratio:%s;object-fit:cover;', $aspect_ratio );
+	}
+
+	$image_markup = wp_get_attachment_image( $attachment_id, $size_slug, false, $img_attr );
+	if ( ! $image_markup ) {
+		return '';
+	}
+
+	$image_attributes = array_merge(
+		array(
+			'id'       => $attachment_id,
+			'data-id'  => (string) $attachment_id,
+			'sizeSlug' => $size_slug,
+		),
+		block_core_gallery_dynamic_image_link_attributes( $attachment_id, $attributes )
+	);
+
+	if ( $aspect_ratio && 'auto' !== $aspect_ratio ) {
+		$image_attributes['aspectRatio'] = $aspect_ratio;
+		$image_attributes['scale']       = 'cover';
+	}
+
+	// Wrap in a link when the gallery links images somewhere.
+	if ( ! empty( $image_attributes['href'] ) ) {
+		$image_markup = sprintf(
+			'<a href="%1$s"%2$s%3$s>%4$s</a>',
+			esc_url( $image_attributes['href'] ),
+			isset( $image_attributes['linkTarget'] ) ? ' target="' . esc_attr( $image_attributes['linkTarget'] ) . '"' : '',
+			isset( $image_attributes['rel'] ) ? ' rel="' . esc_attr( $image_attributes['rel'] ) . '"' : '',
+			$image_markup
+		);
+	}
+
+	$caption = wp_get_attachment_caption( $attachment_id );
+	if ( $caption ) {
+		$image_markup .= sprintf(
+			'<figcaption class="wp-element-caption">%s</figcaption>',
+			wp_kses_post( $caption )
+		);
+	}
+
+	$figure = sprintf(
+		'<figure class="wp-block-image size-%1$s">%2$s</figure>',
+		esc_attr( $size_slug ),
+		$image_markup
+	);
+
+	$image_block = array(
+		'blockName'    => 'core/image',
+		'attrs'        => $image_attributes,
+		'innerBlocks'  => array(),
+		'innerHTML'    => $figure,
+		'innerContent' => array( $figure ),
+	);
+
+	return ( new WP_Block( $image_block, $context ) )->render();
+}
+
+/**
  * Renders the `core/gallery` block on the server.
  *
  * @since 6.0.0
@@ -63,6 +219,43 @@ add_filter( 'render_block_context', 'block_core_gallery_render_context', 10, 2 )
  * @return string The content of the block being rendered.
  */
 function block_core_gallery_render( $attributes, $content, $block ) {
+	// In dynamic mode the gallery has no inner image blocks; resolve the
+	// configured source to a list of attachments and render an image block for
+	// each, injecting them into the (otherwise empty) gallery wrapper. The
+	// existing gap/randomOrder/lightbox post-processing below then runs over the
+	// generated markup unchanged.
+	if ( ! empty( $attributes['dynamicSource'] ) ) {
+		$attachment_ids = block_core_gallery_resolve_dynamic_source( $attributes['dynamicSource'], $block );
+
+		// Expose the gallery's provided context (plus galleryId/postId/postType)
+		// to each image block, since these images are rendered outside the
+		// gallery's real inner-block tree.
+		$image_context = array_merge(
+			is_array( $block->context ) ? $block->context : array(),
+			array(
+				'allowResize'          => $attributes['allowResize'] ?? false,
+				'imageCrop'            => $attributes['imageCrop'] ?? true,
+				'fixedHeight'          => $attributes['fixedHeight'] ?? true,
+				'navigationButtonType' => $attributes['navigationButtonType'] ?? 'icon',
+			)
+		);
+
+		$images_markup = '';
+		foreach ( $attachment_ids as $attachment_id ) {
+			$images_markup .= block_core_gallery_render_dynamic_image( $attachment_id, $attributes, $image_context );
+		}
+
+		// Inject the generated images directly after the opening wrapper tag.
+		// The saved content for a dynamic gallery is the bare `<figure>` wrapper
+		// (optionally followed by a gallery `<figcaption>`); attributes on the
+		// wrapper are class/style/id/data-* only, so the first `>` reliably ends
+		// the opening tag.
+		$opening_tag_end = strpos( $content, '>' );
+		if ( false !== $opening_tag_end ) {
+			$content = substr( $content, 0, $opening_tag_end + 1 ) . $images_markup . substr( $content, $opening_tag_end + 1 );
+		}
+	}
+
 	// Adds a style tag for the --wp--style--unstable-gallery-gap var.
 	// The Gallery block needs to recalculate Image block width based on
 	// the current gap setting in order to maintain the number of flex columns

@@ -18,6 +18,8 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	ToolbarDropdownMenu,
 	PanelBody,
+	Button,
+	__experimentalConfirmDialog as ConfirmDialog,
 } from '@wordpress/components';
 import {
 	store as blockEditorStore,
@@ -29,7 +31,7 @@ import {
 	MediaReplaceFlow,
 	useSettings,
 } from '@wordpress/block-editor';
-import { Platform, useEffect, useMemo } from '@wordpress/element';
+import { Platform, useEffect, useMemo, useState } from '@wordpress/element';
 import { __, _x, sprintf } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { View } from '@wordpress/primitives';
@@ -67,6 +69,10 @@ import useImageSizes from './use-image-sizes';
 import useGetNewImages from './use-get-new-images';
 import useGetMedia from './use-get-media';
 import GapStyles from './gap-styles';
+import useDynamicImages from './use-dynamic-images';
+import DynamicGalleryPreview from './dynamic-gallery-preview';
+import buildImageBlockAttributes from './build-image-block-attributes';
+import { getSourceLabel } from './dynamic-source';
 
 const MAX_COLUMNS = 8;
 const LINK_OPTIONS = [
@@ -133,7 +139,11 @@ export default function GalleryEdit( props ) {
 		insertBlocksAfter,
 		isContentLocked,
 		onFocus,
+		context,
 	} = props;
+
+	const isDynamic = !! attributes.dynamicSource;
+	const postId = context?.postId;
 
 	const [ lightboxSetting, defaultRatios, themeRatios, showDefaultRatios ] =
 		useSettings(
@@ -222,15 +232,38 @@ export default function GalleryEdit( props ) {
 
 	const newImages = useGetNewImages( images, imageData );
 
-	// Check if there is at least one image with lightbox enabled
-	const hasLightboxImages = lightboxSetting?.enabled
-		? images.filter(
+	// Dynamic mode: resolve the configured source to media and build the
+	// (non-persisted) image blocks used for the editor preview.
+	const {
+		media: dynamicMedia,
+		imageBlocks: dynamicImageBlocks,
+		isResolving: isResolvingDynamic,
+	} = useDynamicImages( attributes, { postId } );
+
+	// State that drives counts/size options should reflect the dynamic media
+	// when the gallery is in dynamic mode.
+	const displayedImageCount = isDynamic ? dynamicMedia.length : images.length;
+
+	const [ isConfirmingDynamic, setIsConfirmingDynamic ] = useState( false );
+
+	// Check if there is at least one image with lightbox enabled. In dynamic
+	// mode the images inherit the gallery's link setting, so the lightbox is on
+	// when the gallery links images to the lightbox.
+	let hasLightboxImages;
+	if ( isDynamic ) {
+		hasLightboxImages = linkTo === LINK_DESTINATION_LIGHTBOX;
+	} else if ( lightboxSetting?.enabled ) {
+		hasLightboxImages =
+			images.filter(
 				( image ) =>
 					image.attributes?.lightbox?.enabled === undefined ||
 					image.attributes?.lightbox?.enabled === true
-		  ).length > 0
-		: images.filter( ( image ) => image.attributes.lightbox?.enabled )
+			).length > 0;
+	} else {
+		hasLightboxImages =
+			images.filter( ( image ) => image.attributes.lightbox?.enabled )
 				.length > 0;
+	}
 
 	const themeOptions = themeRatios?.map( ( { name, ratio } ) => ( {
 		label: name,
@@ -265,7 +298,7 @@ export default function GalleryEdit( props ) {
 	}, [ newImages ] );
 
 	const imageSizeOptions = useImageSizes(
-		imageData,
+		isDynamic ? dynamicMedia : imageData,
 		isSelected,
 		getSettings
 	);
@@ -436,6 +469,37 @@ export default function GalleryEdit( props ) {
 
 	function onUploadError( message ) {
 		createErrorNotice( message, { type: 'snackbar' } );
+	}
+
+	// Switches the gallery into dynamic mode, displaying images attached to the
+	// current post. Any manually-added image blocks are removed.
+	function enableDynamicMode() {
+		setAttributes( { dynamicSource: { type: 'attachedToPost' } } );
+		replaceInnerBlocks( clientId, [] );
+		setIsConfirmingDynamic( false );
+	}
+
+	// Requests dynamic mode, confirming first if it would discard images that
+	// were added by hand (a one-way, destructive change).
+	function requestEnableDynamicMode() {
+		if ( hasImages ) {
+			setIsConfirmingDynamic( true );
+		} else {
+			enableDynamicMode();
+		}
+	}
+
+	// "Pins" a dynamic gallery: materializes the currently-resolved media as
+	// real, editable image blocks and leaves dynamic mode.
+	function convertToStatic() {
+		const blocks = dynamicMedia.map( ( mediaItem ) =>
+			createBlock(
+				'core/image',
+				buildImageBlockAttributes( mediaItem, attributes )
+			)
+		);
+		replaceInnerBlocks( clientId, blocks );
+		setAttributes( { dynamicSource: undefined } );
 	}
 
 	function setLinkTo( value ) {
@@ -634,8 +698,35 @@ export default function GalleryEdit( props ) {
 	);
 
 	const blockProps = useBlockProps( {
-		className: clsx( className, 'has-nested-images' ),
+		className: clsx(
+			className,
+			'has-nested-images',
+			// In dynamic mode there are no inner blocks, so the layout classes
+			// that the static gallery derives from its children (and `save.js`)
+			// are added here to keep the preview's flex/crop styles correct.
+			isDynamic && {
+				[ `columns-${ columns }` ]: columns !== undefined,
+				'columns-default': columns === undefined,
+				'is-cropped': imageCrop,
+			}
+		),
 	} );
+
+	// Context the gallery provides to its (previewed) image blocks.
+	const galleryContext = useMemo(
+		() => ( {
+			allowResize: attributes.allowResize ?? false,
+			imageCrop,
+			fixedHeight: attributes.fixedHeight,
+			navigationButtonType,
+		} ),
+		[
+			attributes.allowResize,
+			imageCrop,
+			attributes.fixedHeight,
+			navigationButtonType,
+		]
+	);
 
 	const nativeInnerBlockProps = Platform.isNative && {
 		marginHorizontal: 0,
@@ -652,11 +743,33 @@ export default function GalleryEdit( props ) {
 
 	const dropdownMenuProps = useToolsPanelDropdownMenuProps();
 
-	if ( ! hasImages ) {
+	if ( ! hasImages && ! isDynamic ) {
 		return (
 			<View { ...innerBlocksProps }>
 				{ innerBlocksProps.children }
-				{ mediaPlaceholder }
+				<MediaPlaceholder
+					handleUpload={ false }
+					icon={ sharedIcon }
+					labels={ {
+						title: __( 'Gallery' ),
+						instructions: PLACEHOLDER_TEXT,
+					} }
+					onSelect={ updateImages }
+					allowedTypes={ ALLOWED_MEDIA_TYPES }
+					multiple
+					onError={ onUploadError }
+					{ ...mediaPlaceholderProps }
+				>
+					{ Platform.isWeb && (
+						<Button
+							__next40pxDefaultSize
+							variant="tertiary"
+							onClick={ enableDynamicMode }
+						>
+							{ __( 'Display images attached to this post' ) }
+						</Button>
+					) }
+				</MediaPlaceholder>
 			</View>
 		);
 	}
@@ -666,6 +779,36 @@ export default function GalleryEdit( props ) {
 	return (
 		<>
 			<InspectorControls>
+				{ Platform.isWeb && (
+					<PanelBody title={ __( 'Source' ) }>
+						{ isDynamic ? (
+							<>
+								<p>
+									{ getSourceLabel(
+										attributes.dynamicSource
+									) }
+								</p>
+								<Button
+									__next40pxDefaultSize
+									variant="secondary"
+									onClick={ convertToStatic }
+									disabled={ ! dynamicMedia.length }
+									accessibleWhenDisabled
+								>
+									{ __( 'Convert to individual images' ) }
+								</Button>
+							</>
+						) : (
+							<Button
+								__next40pxDefaultSize
+								variant="secondary"
+								onClick={ requestEnableDynamicMode }
+							>
+								{ __( 'Display images attached to this post' ) }
+							</Button>
+						) }
+					</PanelBody>
+				) }
 				{ Platform.isWeb && (
 					<ToolsPanel
 						label={ __( 'Settings' ) }
@@ -689,12 +832,13 @@ export default function GalleryEdit( props ) {
 						} }
 						dropdownMenuProps={ dropdownMenuProps }
 					>
-						{ images.length > 1 && (
+						{ displayedImageCount > 1 && (
 							<ToolsPanelItem
 								isShownByDefault
 								label={ __( 'Columns' ) }
 								hasValue={ () =>
-									!! columns && columns !== images.length
+									!! columns &&
+									columns !== displayedImageCount
 								}
 								onDeselect={ () =>
 									setColumnsNumber( undefined )
@@ -706,14 +850,14 @@ export default function GalleryEdit( props ) {
 										columns
 											? columns
 											: defaultColumnsNumber(
-													images.length
+													displayedImageCount
 											  )
 									}
 									onChange={ setColumnsNumber }
 									min={ 1 }
 									max={ Math.min(
 										MAX_COLUMNS,
-										images.length
+										displayedImageCount
 									) }
 									required
 									__next40pxDefaultSize
@@ -848,17 +992,22 @@ export default function GalleryEdit( props ) {
 				) }
 				{ Platform.isNative && (
 					<PanelBody title={ __( 'Settings' ) }>
-						{ images.length > 1 && (
+						{ displayedImageCount > 1 && (
 							<RangeControl
 								label={ __( 'Columns' ) }
 								value={
 									columns
 										? columns
-										: defaultColumnsNumber( images.length )
+										: defaultColumnsNumber(
+												displayedImageCount
+										  )
 								}
 								onChange={ setColumnsNumber }
 								min={ 1 }
-								max={ Math.min( MAX_COLUMNS, images.length ) }
+								max={ Math.min(
+									MAX_COLUMNS,
+									displayedImageCount
+								) }
 								{ ...MOBILE_CONTROL_PROPS_RANGE_CONTROL }
 								required
 								__next40pxDefaultSize
@@ -960,7 +1109,7 @@ export default function GalleryEdit( props ) {
 			) : null }
 			{ Platform.isWeb && (
 				<>
-					{ ! multiGallerySelection && (
+					{ ! multiGallerySelection && ! isDynamic && (
 						<BlockControls group="other">
 							<MediaReplaceFlow
 								allowedTypes={ ALLOWED_MEDIA_TYPES }
@@ -982,19 +1131,41 @@ export default function GalleryEdit( props ) {
 					/>
 				</>
 			) }
-			<Gallery
-				{ ...props }
-				isContentLocked={ isContentLocked }
-				images={ images }
-				mediaPlaceholder={
-					! hasImages || Platform.isNative
-						? mediaPlaceholder
-						: undefined
-				}
-				blockProps={ innerBlocksProps }
-				insertBlocksAfter={ insertBlocksAfter }
-				multiGallerySelection={ multiGallerySelection }
-			/>
+			{ isDynamic ? (
+				<DynamicGalleryPreview
+					imageBlocks={ dynamicImageBlocks }
+					galleryContext={ galleryContext }
+					blockProps={ blockProps }
+					isResolving={ isResolvingDynamic }
+				/>
+			) : (
+				<Gallery
+					{ ...props }
+					isContentLocked={ isContentLocked }
+					images={ images }
+					mediaPlaceholder={
+						! hasImages || Platform.isNative
+							? mediaPlaceholder
+							: undefined
+					}
+					blockProps={ innerBlocksProps }
+					insertBlocksAfter={ insertBlocksAfter }
+					multiGallerySelection={ multiGallerySelection }
+				/>
+			) }
+			{ isConfirmingDynamic && (
+				<ConfirmDialog
+					isOpen
+					confirmButtonText={ __( 'Use attached images' ) }
+					onConfirm={ enableDynamicMode }
+					onCancel={ () => setIsConfirmingDynamic( false ) }
+					size="medium"
+				>
+					{ __(
+						'Switching to images attached to this post will remove the images currently in this gallery. You can convert it back to individual images later, but the original selection won’t be restored.'
+					) }
+				</ConfirmDialog>
+			) }
 		</>
 	);
 }

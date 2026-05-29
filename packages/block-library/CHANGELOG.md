@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### New Features
+
+-   Gallery: add a dynamic mode that displays images resolved from a source (initially the images attached to the current post) instead of manually-added image blocks, with an editor preview, mode toggles, and server-side rendering.
+
 ## 9.47.0 (2026-05-27)
 
 ### Internal
