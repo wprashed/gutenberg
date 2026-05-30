@@ -41,7 +41,7 @@ $palette-header-height: 48px;
 		justify-content: center;
 		border-radius: $radius-small 0 0 $radius-small;
 
-		& + [cmdk-input] {
+		& + .commands-command-menu__input {
 			border-top-left-radius: 0;
 			border-bottom-left-radius: 0;
 		}
@@ -58,7 +58,7 @@ $palette-header-height: 48px;
 	// the style here is a hack to force safari to repaint to avoid a style glitch
 	will-change: transform;
 
-	[cmdk-input] {
+	.commands-command-menu__input {
 		border: none;
 		width: 100%;
 		padding: $grid-unit-15 $grid-unit-05;
@@ -68,6 +68,7 @@ $palette-header-height: 48px;
 		font-size: 15px;
 		line-height: 24px;
 		border-radius: 0;
+		background: transparent;
 
 		&::placeholder {
 			color: $gray-700;
@@ -79,7 +80,51 @@ $palette-header-height: 48px;
 		}
 	}
 
-	[cmdk-item] {
+	// Reset the design-system list layout to a simple scrolling container so the
+	// palette keeps its previous appearance.
+	.commands-command-menu__list {
+		display: block;
+		max-height: min($palette-max-height - $palette-header-height, calc(70vh - $palette-header-height));
+		overflow: auto;
+		scroll-padding-top: $grid-unit-10;
+		scroll-padding-bottom: $grid-unit-10;
+		font-family: inherit;
+		font-size: $default-font-size;
+		color: $gray-900;
+
+		// Show a border once there are results or a "nothing found" message.
+		&:has(.commands-command-menu__group),
+		&:has(.commands-command-menu__empty) {
+			border-top: $border-width solid $gray-300;
+		}
+	}
+
+	.commands-command-menu__list-scrollable-container {
+		display: block;
+		overflow: visible;
+		padding: 0;
+	}
+
+	.commands-command-menu__group {
+		padding: 0 $grid-unit-10 $grid-unit-05;
+	}
+
+	.commands-command-menu__group-label {
+		margin-top: $grid-unit-10;
+		padding: $grid-unit-10 $grid-unit-20;
+		line-height: $grid-unit-20;
+		font-size: $font-size-x-small;
+		font-weight: $font-weight-medium;
+		text-transform: uppercase;
+		color: $gray-900;
+	}
+
+	.commands-command-menu__item {
+		// Reset the design-system item styling.
+		min-height: 0;
+		margin-inline: 0;
+		border-radius: 0;
+		background: none;
 		cursor: var(--wpds-cursor-control);
 		display: flex;
 		align-items: center;
@@ -96,7 +141,11 @@ $palette-header-height: 48px;
 			fill: $gray-900;
 		}
 
-		> div {
+		.commands-command-menu__item-content {
+			display: flex;
+			align-items: center;
+			flex: 1;
+			min-width: 0;
 			border-radius: $radius-small;
 			min-height: $grid-unit-40;
 			padding: $grid-unit-05;
@@ -104,8 +153,8 @@ $palette-header-height: 48px;
 			padding-right: $grid-unit-20; // Accounts for the command category.
 		}
 
-		&[aria-selected="true"] > div,
-		&:active > div {
+		&[data-highlighted] .commands-command-menu__item-content,
+		&:active .commands-command-menu__item-content {
 			background: var(--wp-admin-theme-color);
 			color: $white;
 
@@ -114,57 +163,19 @@ $palette-header-height: 48px;
 			}
 		}
 
-		> .has-icon {
+		.commands-command-menu__item-content.has-icon {
 			padding-left: $grid-unit;
 		}
 	}
 
-	[cmdk-group]:has([cmdk-group-items]:empty) {
-		display: none;
-	}
-
-	[cmdk-root] > [cmdk-list] {
-		max-height: min($palette-max-height - $palette-header-height, calc(70vh - $palette-header-height));
-		overflow: auto;
-		scroll-padding-top: $grid-unit-10;
-		scroll-padding-bottom: $grid-unit-10;
-
-		// Show border when there are commands or "nothing found" message.
-		&:has([cmdk-group-items]:not(:empty)),
-		&:has([cmdk-empty]) {
-			border-top: $border-width solid $gray-300;
-		}
-
-		& [cmdk-list-sizer] > [cmdk-group] > [cmdk-group-items]:not(:empty) {
-			padding: 0 $grid-unit-10 $grid-unit-05;
-		}
-
-		[cmdk-group-heading] {
-			margin-top: $grid-unit-10;
-			padding: $grid-unit-10 $grid-unit-20;
-			line-height: $grid-unit-20;
-			font-size: $font-size-x-small;
-			font-weight: $font-weight-medium;
-			text-transform: uppercase;
-			color: $gray-900;
-		}
-	}
-
-	[cmdk-empty] {
+	.commands-command-menu__empty {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		white-space: pre-wrap;
 		color: $gray-900;
 		padding: $grid-unit-10 0 $grid-unit-40;
-	}
-
-	[cmdk-loading] {
-		padding: $grid-unit-20;
-	}
-
-	[cmdk-list-sizer] {
-		position: relative;
+		min-height: 0;
 	}
 }
 
@@ -187,13 +198,13 @@ $palette-header-height: 48px;
 	line-height: $default-line-height;
 	text-align: right;
 
-	[aria-selected="true"] &,
-	[cmdk-item]:active & {
+	.commands-command-menu__item[data-highlighted] &,
+	.commands-command-menu__item:active & {
 		color: rgba($white, 0.8);
 	}
 }
 
-.commands-command-menu__item mark {
+.commands-command-menu__item-content mark {
 	color: inherit;
 	background: unset;
 	font-weight: 600;

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Enhancements
+
+-   Replace the `cmdk` dependency with the `Autocomplete` primitive from `@wordpress/ui` to improve the command palette's accessibility ([#76950](https://github.com/WordPress/gutenberg/issues/76950)).
+
 ## 1.47.0 (2026-05-27)
 
 ## 1.46.0 (2026-05-14)

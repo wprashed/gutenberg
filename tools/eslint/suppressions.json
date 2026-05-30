@@ -609,14 +609,6 @@
 			"count": 2
 		}
 	},
-	"packages/commands/src/components/command-menu.js": {
-		"@wordpress/use-recommended-components": {
-			"count": 1
-		},
-		"react-hooks/refs": {
-			"count": 1
-		}
-	},
 	"packages/components/src/autocomplete/autocompleter-ui.tsx": {
 		"react-hooks/refs": {
 			"count": 6
@@ -1858,7 +1850,7 @@
 	},
 	"widgets/events/components/location-picker/location-picker.tsx": {
 		"@wordpress/use-recommended-components": {
-			"count": 5
+			"count": 4
 		}
 	},
 	"widgets/quick-draft/components/drafts-list/drafts-list.tsx": {
